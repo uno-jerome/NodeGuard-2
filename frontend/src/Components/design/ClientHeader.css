@@ -1,0 +1,139 @@
+.client-header {
+	position: relative;
+	display: flex;
+	height: 78px;
+	margin-top: 4px;
+	align-items: flex-start;
+	justify-content: center;
+	
+}
+
+.home-header {
+	position: relative;
+	z-index: 1;
+	display: flex;         
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+	max-width: 100%;
+	margin: 0 auto;
+	padding: 40px 250px 100px;
+}
+.logo-container {
+	position: absolute;
+	top: 0;
+	left: clamp(24px, 13vw, 190px);
+	display: flex;
+	width: 155px;
+	height: 78px;
+	align-items: center;
+	gap: 8px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+}
+
+.client-header-icon {
+	width: 44px;
+	height: 44px;
+	object-fit: contain;
+}
+
+.client-header-name {
+	width: 100px;
+	height: 70px;
+	object-fit: contain;
+}
+
+.client-navbar {
+	position: absolute;
+	top: 5px;
+	left: 50%;
+	display: flex;
+	height: 56px;
+	align-items: center;
+	gap: 12px;
+	padding: 0px;
+	border-radius: 60px;
+    border: 1px solid rgba(143,171,212, 0.40);
+	background: rgba(41, 43, 44, 0.50);
+	transform: translateX(-50%);
+	white-space: nowrap;
+
+}
+
+.client-navbar-button {
+	position: relative;
+	z-index: 1;
+	min-width: 106px;
+	height: 56px;
+	padding: 0 22px;
+	border: 0;
+	border-radius: 40px;
+	background: transparent;
+	color: #ffffff;
+	cursor: pointer;
+	font-family: var(--font-ui);
+	font-size: 17px;
+	line-height: normal;
+    font-weight: 250;
+	transition: background-color 160ms ease, color 160ms ease;
+}
+
+.client-navbar-button:hover,
+.client-navbar-button[aria-current="page"] {
+	background: rgba(91, 84, 84, 0.3);
+	font-weight: 600;
+}
+
+.client-navbar-button:focus-visible {
+	outline: 2px solid #8fabd4;
+	outline-offset: 3px;
+}
+
+.client-navbar-pill {
+	display: none;
+}
+
+@media (max-width: 900px) {
+	.logo-container {
+		left: 16px;
+		width: 52px;
+	}
+
+	.client-header-name {
+		display: none;
+	}
+
+	.client-navbar {
+		left: auto;
+		right: 16px;
+		transform: none;
+		gap: 4px;
+		padding: 0 8px;
+	}
+
+	.client-navbar-button {
+		min-width: auto;
+		padding: 0 16px;
+	}
+}
+
+@media (max-width: 600px) {
+	.logo-container {
+		display: none;
+	}
+
+	.client-navbar {
+		left: 40%;
+		right: auto;
+		max-width: calc(100% - 24px);
+		transform: translateX(-50%);
+	}
+
+	.client-navbar-button {
+		padding: 0 10px;
+		font-size: 16px;
+	}
+}

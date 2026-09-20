@@ -1,11 +1,14 @@
+@import url("https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap");
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --font-ui: Inter, Calibri, Anuphan, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --font-display: Antonio, Inter, Calibri, sans-serif;
+    --font-ui: Anuphan, Calibri, Inter, Carlito, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-display: Anuphan, Calibri, Inter, Carlito, sans-serif;
     --portal-bg: #1A1525;
     --portal-text: #FFFFFF;
   }
@@ -14,32 +17,33 @@
     font-family: var(--font-ui);
     margin: 0;
     min-height: 100vh;
-    width: 100%;
+    min-width: 100%;
     background-color: var(--portal-bg);
     color: var(--portal-text);
+    overflow-x: hidden;
+    
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
   }
 
-  [data-theme="client"] {
-    --portal-bg: linear-gradient( 180deg,
-    #121212 0%,
-    #121212 61%,
-    #212B3B 75%,
-    #2E425F 85%,
-    rgb(74 112 169 / 0.5) 100%
-  );
+  [data-portal="client"] {
+    --portal-bg: linear-gradient(
+        180deg,
+        #121212 0%,
+        #121212 61%,
+        #212B3B 75%,
+        #2E425F 85%,
+        rgb(74 112 169 / .7) 100%
+    );
     --portal-text: #ffffff;
   }
 
   [data-portal="login"] {
     --portal-bg: linear-gradient( 168deg,
-    #1A1525 0%,
-    #1A1525 90%,
-    rgb(74 112 169 / 0.5) 100%
-  );
+    #1A1525 82.02%,
+    rgb(74 112 169 / 0.80) 94.28%);
     --portal-text: #ffffff;
   }
 
