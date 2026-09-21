@@ -1,3 +1,10 @@
+import AdminHeader from "../../Components/navbar/AdminHeader";
+
 export default function AuditLog() {
-	return <main><h1>Audit Log</h1></main>;
+	return (
+		<>
+			<AdminHeader />
+			<main><h1>Audit Log</h1></main>
+		</>
+	);
 }

@@ -1,3 +1,10 @@
+import AnalystHeader from "../../Components/navbar/AnalystHeader";
+
 export default function AnalystCaseUpdate() {
-	return <main><h1>Analyst Case Update</h1></main>;
+	return (
+		<>
+			<AnalystHeader />
+			<main><h1>Analyst Case Update</h1></main>
+		</>
+	);
 }

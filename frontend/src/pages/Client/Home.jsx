@@ -43,7 +43,7 @@ export default function ClientHome() {
             <div className="home-header">
                 <h1>Report Cyber Incidents & Secure Digital Evidence</h1>
                 <p className="phead">An official platform for citizens to file cybercrime incidents, generate cryptographic evidence baselines, and receive verified investigation tracking.</p>
-            </div>
+            </div>p
 
         <section className="client-action-section">
             <div className="File-appeal-container">

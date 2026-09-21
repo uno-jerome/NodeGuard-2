@@ -47,6 +47,18 @@
     --portal-text: #ffffff;
   }
 
+  [data-portal="admin"] {
+    --portal-bg: #030617;
+    --portal-text: #ffffff;
+  }
+
+  [data-portal="AdminHeader"] {
+    --portal-bg: rgba(26, 21, 37, 0.5);
+    --portal-text: #64748B;
+    --portal-hover: #7D80AC;
+    --portal-icon: #222551;
+  }
+
   .portal-container {
     width: 100%;
     min-height: 100vh;

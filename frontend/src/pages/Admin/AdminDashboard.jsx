@@ -1,3 +1,10 @@
-export default function AdminDashboard() {
-	return <main><h1>Admin Dashboard</h1></main>;
+import AdminHeader from "../../Components/navbar/AdminHeader";
+
+export default function AdminCaseUpdate() {
+	return (
+		<>
+			<AdminHeader />
+			<main><h1>Admin Case Update</h1></main>
+		</>
+	);
 }
