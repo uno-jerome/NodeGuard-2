@@ -1,0 +1,289 @@
+.user-management-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100vw;
+    height: 600px;
+    overflow: hidden;
+    background: #030617;
+    color: #f8fafc;
+}
+
+.user-management-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 50px 8px;
+    background-color: #030617;
+    border-bottom: 18px solid rgba(74, 112, 169, 0.2);
+}
+
+.user-management-header h1 {
+    margin: 0;
+    color: #fff;
+    font-family: Anuphan, sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.user-management-header h2 {
+    margin: 6px 0 0;
+    color: rgba(255, 255, 255, 0.72);
+    font-family: Anuphan, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.user-management-content {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    padding: 18px 32px 20px;
+    width: 100%;
+    max-width: 100%;
+    height: calc(100vh - 120px);
+    min-height: 0;
+    flex: 1;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.user-management-left {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    min-width: 0;
+    gap: 20px;
+    overflow: hidden;
+    align-items: center;
+}
+
+.user-left-info {
+    display: flex;
+    width: 100%;
+    max-width: 510px;
+    padding: 18px 18px 14px;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.82);
+    border-radius: 20px;
+    border: 1px solid #64748B;
+    background: rgba(0, 0, 0, 0.70);
+    box-sizing: border-box;
+}
+
+.user-left-info-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-left-info-title svg {
+    width: 16px;
+    height: 21px;
+    color: #1D64CE;
+    flex-shrink: 0;
+}
+
+.user-left-info-title h3 {
+    color: #FFF;
+    font-family: Inter;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.user-left-info-description {
+    color: #FFF;
+    font-family: Anuphan;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    width: 100%;
+    text-align: left;
+    max-width: 564px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgb(250, 250, 250);
+    }
+
+.user-left-info_container {
+    display: flex;
+    width: 100%;
+    max-width: 600px;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 18px 18px 16px;
+    background: rgba(74, 112, 169, 0.50);;
+    border-radius: 20px;
+    box-shadow: 0 14px 26px rgba(2, 6, 23, 0.35);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.user-left-info-Header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.user-left-info-Header h3 {
+    color: #FFF;
+    text-align: center;
+    font-family: Inter;
+    font-size: 22px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgb(246, 246, 247);
+}
+
+.user-left-info-Header p {
+    color: #FFF;
+    text-align: center;
+    font-family: Anuphan;
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    width: 100%;
+    max-width: 480px;
+    padding: 16px 14px;
+}
+
+.forensic-clearance-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.forensic-clearance-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-family: Anuphan, sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+}
+
+.forensic-clearance-badge--blue {
+    background: rgba(54, 122, 223, 0.12);
+    border: 0.3px solid #3B82F6;;
+    color: #58A0FF;
+}
+
+.forensic-clearance-badge--green {
+    background: rgba(38, 183, 25, 0.20);
+    border: 0.3px solid #26B719;
+    color: #26B719;
+}
+
+.forensic-clearance-badge--gray {
+    background: rgba(143, 171, 212, 0.20);;
+    border: 0.3px solid #8FABD4;;
+    color: #8FABD4;
+}
+
+.user-management-button {
+    width: fit-content;
+    margin-top: 14px;
+    padding: 9px 16px;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    border-radius: 20px;
+    background: #4A70A9;;
+    color: #FFFFFF;
+    font-family: Anuphan, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self: flex-end;
+}
+
+.user-management-button:hover {
+    background: rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
+}
+
+.user-management-right {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 0;
+    align-items: center;
+}
+
+.user-management-note {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(143, 171, 212, 1);
+    border-radius: 12px;
+    min-height: 150px;
+    width: 430px;
+    padding: 18px 20px;
+}
+
+.user-management-note-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(143, 171, 212, 0.35);
+}
+
+.user-management-note-title img {
+    width: 15px;
+    height: 19px;
+    object-fit: contain;
+}
+
+.user-management-note-title h3 {
+    margin: 0;
+    color: #ffffff;
+    font-family: Inter, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.user-management-note p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.72);
+    font-family: Anuphan, sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+    .user-management-note {
+        width: 100%;
+    }
+}
+
+@media (max-width: 900px) {
+    .user-management-content {
+        flex-direction: column;
+    }
+
+    .user-management-left,
+    .user-management-right {
+        width: 100%;
+    }
+}
