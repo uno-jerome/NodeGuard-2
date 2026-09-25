@@ -8,7 +8,6 @@ import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminCaseUpdate from "./pages/Admin/AdminCaseUpdate";
 import AuditLog from "./pages/Admin/AuditLog";
 import UserManament from "./pages/Admin/UserManament";
-import ProvisionStaff from "./Components/ProvisionStaff";
 import AnalystDashboard from "./pages/Analyst/AnalystDashboard";
 import AnalystCaseUpdate from "./pages/Analyst/AnalystCaseUpdate";
 
@@ -77,7 +76,7 @@ export default function App() {
         <Route path="/admin/users/provision"
           element={
             <div data-portal="admin" className="portal-container">
-              <ProvisionStaff />
+              <UserManament />
             </div>
           }
         />

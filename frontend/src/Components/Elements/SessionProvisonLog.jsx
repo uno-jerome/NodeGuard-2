@@ -22,7 +22,6 @@ export function useProvisioningLog() {
     setToast({ type: 'added', entry });
   };
  
-  // Call your API first if you have one, then this.
   const removeStaff = (id) => {
     const entry = entries.find((e) => e.id === id);
     if (!entry) return;

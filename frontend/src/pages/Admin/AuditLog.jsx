@@ -1,25 +1,340 @@
-import AdminHeader from "../../Components/navbar/AdminHeader";
-import { useState } from "react";
-import { SessionProvisioningLog } from "../../Components/Elements/SessionProvisonLog";
+﻿import AdminHeader from "../../Components/navbar/AdminHeader";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import "../../Components/design/Admin/AuditLog.css";
+import searchIcon from "../../public/search_icon.svg";
 
-const previewEntries = [
-	{ id: "preview-1", name: "Amina Rahman", email: "amina@nodeguard.local", role: "Investigator", time: "09:42" },
-	{ id: "preview-2", name: "David Chen", email: "david@nodeguard.local", role: "Analyst", time: "09:18" },
+export const Ledger_Header = {
+    title: 'Global Custody Ledger',
+};
+
+const EMPTY_FILTERS = { action: '', incidentId: '', startDate: '', endDate: '' };
+
+const DEFAULT_ENTRIES = [
+    {
+        id: 1,
+        action: 'VERIFY_FAIL',
+        actor: 'A. Hart',
+        role: 'Investigator',
+        ip: '10.0.0.12',
+        details: 'Hash mismatch detected during evidence intake verification.',
+        timestamp: '2026-09-24T14:22:00Z',
+        incidentId: 'INC-1024',
+    },
+    {
+        id: 2,
+        action: 'VERIFY_PASS',
+        actor: 'M. Cole',
+        role: 'Admin',
+        ip: '10.0.0.41',
+        details: 'Evidence chain verified and sealed successfully.',
+        timestamp: '2026-09-23T09:10:00Z',
+        incidentId: 'INC-860',
+    },
+    {
+        id: 3,
+        action: 'INGESTION',
+        actor: 'R. Patel',
+        role: 'Client',
+        ip: '10.0.0.77',
+        details: 'New forensic artifact uploaded from client packet.',
+        timestamp: '2026-09-20T18:15:00Z',
+        incidentId: 'INC-403',
+    },
+    {
+        id: 4,
+        action: 'STATUS_CHANGE',
+        actor: 'K. James',
+        role: 'Investigator',
+        ip: '10.0.0.28',
+        details: 'Case status changed from investigation to review.',
+        timestamp: '2026-09-19T11:42:00Z',
+        incidentId: 'INC-219',
+    },
+    {
+        id: 5,
+        action: 'VIEW',
+        actor: 'S. Lin',
+        role: 'Admin',
+        ip: '10.0.0.19',
+        details: 'Incident evidence review opened by administrator.',
+        timestamp: '2026-09-18T08:35:00Z',
+        incidentId: 'INC-1024',
+    },
+    {
+        id: 6,
+        action: 'DOWNLOAD',
+        actor: 'D. Ross',
+        role: 'Client',
+        ip: '10.0.0.91',
+        details: 'Case archive package downloaded for legal review.',
+        timestamp: '2026-09-17T16:04:00Z',
+        incidentId: 'INC-860',
+    },
 ];
 
-export default function AuditLog() {
-	const [entries, setEntries] = useState(previewEntries);
+const ACTION_BADGES = {
+    VERIFY_FAIL: {
+        label: 'Tamper Detected', color: '#fb7185', border: 'rgba(244,63,94,0.4)', bg: 'rgba(244,63,94,0.1)', pulse: true,
+    },
+    VERIFY_PASS: {
+        label: 'Passed Verification', color: '#34d399', border: 'rgba(16,185,129,0.3)', bg: 'rgba(16,185,129,0.1)',
+    },
+    INGESTION: {
+        label: 'Ingestion', color: '#818cf8', border: 'rgba(99,102,241,0.3)', bg: 'rgba(99,102,241,0.1)',
+    },
+    VIEW: {
+        label: 'View', color: '#38bdf8', border: 'rgba(14,165,233,0.3)', bg: 'rgba(14,165,233,0.1)',
+    },
+    DOWNLOAD: {
+        label: 'Download', color: '#22d3ee', border: 'rgba(6,182,212,0.3)', bg: 'rgba(6,182,212,0.1)',
+    },
+    STATUS_CHANGE: {
+        label: 'Status Change', color: '#fbbf24', border: 'rgba(245,158,11,0.3)', bg: 'rgba(245,158,11,0.1)',
+    },
+};
 
-	return (
-		<>
-			<AdminHeader />
-			<main>
-				<h1>Session Provisioning Log</h1>
-				<SessionProvisioningLog
-					entries={entries}
-					onRemove={(id) => setEntries((current) => current.filter((entry) => entry.id !== id))}
-				/>
-			</main>
-		</>
-	);
+export const ROLE_BADGES = {
+    Admin: { color: '#E9B21B', border: 'rgba(233, 178, 27, 1)', bg: 'rgba(92, 70, 10, 0.5)', bold: true },
+    Investigator: { color: '#1FFE13', border: 'rgba(38, 183, 25, 1)', bg: 'rgba(31, 254, 19, 0.20)' },
+    Client: { color: '#3B82F6', border: 'rgba(59, 130, 246, 1)', bg: 'rgba(34, 37, 81, 0.5)' },
+};
+
+const FALLBACK_ACTION = { label: null, color: '#94a3b8', border: '#64748b', bg: 'rgba(100,116,139,0.15)', path: null };
+const FALLBACK_ROLE = { color: '#94a3b8', border: '#64748b', bg: 'rgba(100,116,139,0.15)' };
+
+export function ActionBadge({ action }) {
+    const b = ACTION_BADGES[action] ?? { ...FALLBACK_ACTION, label: action };
+    return (
+        <span className={`badge${b.pulse ? ' badge--pulse' : ''}`} style={{ color: b.color, borderColor: b.border, background: b.bg }}>
+            {b.path && (
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke={b.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={b.path} />
+                </svg>
+            )}
+            {b.label}
+        </span>
+    );
+}
+
+export function RoleBadge({ role }) {
+    const b = ROLE_BADGES[role] ?? FALLBACK_ROLE;
+    return (
+        <span className={`badge${b.bold ? ' badge--bold' : ''}`} style={{ color: b.color, borderColor: b.border, background: b.bg }}>
+            {role}
+        </span>
+    );
+}
+
+export default function AuditLog({
+    showing,
+    total,
+    incidentOptions = [],
+    onSearch,
+    onFiltersChange,
+    entries = DEFAULT_ENTRIES,
+    children,
+}) {
+    const [query, setQuery] = useState('');
+    const [filters, setFilters] = useState(EMPTY_FILTERS);
+    const [showFilters, setShowFilters] = useState(false);
+    const [inspectedEntry, setInspectedEntry] = useState(null);
+    const panelRef = useRef(null);
+
+    const submitSearch = (value) => {
+        setQuery(value);
+        onSearch?.(value);
+    };
+
+    const applyFilters = (next) => {
+        setFilters(next);
+        onFiltersChange?.(next);
+    };
+
+    const onFilterClick = () => setShowFilters((visible) => !visible);
+
+    useEffect(() => {
+        if (!showFilters) return;
+
+        const onDocClick = (event) => {
+            if (panelRef.current && !panelRef.current.contains(event.target)) {
+                setShowFilters(false);
+            }
+        };
+
+        const onKey = (event) => {
+            if (event.key === 'Escape') {
+                setShowFilters(false);
+            }
+        };
+
+        document.addEventListener('mousedown', onDocClick);
+        document.addEventListener('keydown', onKey);
+
+        return () => {
+            document.removeEventListener('mousedown', onDocClick);
+            document.removeEventListener('keydown', onKey);
+        };
+    }, [showFilters]);
+
+    const filteredEntries = useMemo(() => {
+        const normalizedQuery = query.trim().toLowerCase();
+
+        return entries.filter((entry) => {
+            const matchesQuery =
+                !normalizedQuery ||
+                [entry.actor, entry.role, entry.ip, entry.details, entry.action, entry.incidentId]
+                    .some((value) => String(value ?? '').toLowerCase().includes(normalizedQuery));
+
+            const matchesAction = !filters.action || entry.action === filters.action;
+            const matchesIncident = !filters.incidentId || entry.incidentId === filters.incidentId;
+
+            const entryDate = new Date(entry.timestamp);
+            const startDate = filters.startDate ? new Date(`${filters.startDate}T00:00:00`) : null;
+            const endDate = filters.endDate ? new Date(`${filters.endDate}T23:59:59`) : null;
+
+            const matchesStartDate = !startDate || entryDate >= startDate;
+            const matchesEndDate = !endDate || entryDate <= endDate;
+
+            return matchesQuery && matchesAction && matchesIncident && matchesStartDate && matchesEndDate;
+        });
+    }, [entries, filters, query]);
+
+    const activeCount = Object.values(filters).filter(Boolean).length;
+    const displayShowing = showing ?? filteredEntries.length;
+    const displayTotal = total ?? filteredEntries.length;
+
+    return (
+        <>
+            <AdminHeader />
+            <div className="audit-log-container">
+                <section className="audit-log-header">
+                    <h1>Chain of Custody Audit Log</h1>
+                    <h2>This is a log of all the changes made to the chain of custody.</h2>
+                </section>
+
+                <div className="audit-log-divider">
+                    <section className="audit-log-content" ref={panelRef}>
+                        <div className="audit-log-table-header">
+                            <h2 className="audit-log-table-header-title">{Ledger_Header.title}</h2>
+                            <span className="audit-log-count">(Showing {displayShowing} of {displayTotal})</span>
+
+                            <div className="audit-log-search">
+                                <img src={searchIcon} alt="Search" />
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    value={query}
+                                    onChange={(event) => submitSearch(event.target.value)}
+                                />
+                                <kbd>/</kbd>
+                            </div>
+
+                            {activeCount > 0 && (
+                                <button
+                                    type="button"
+                                    className="audit-log-clear-filters"
+                                    onClick={() => {
+                                        setFilters(EMPTY_FILTERS);
+                                        onFiltersChange?.(EMPTY_FILTERS);
+                                    }}
+                                >
+                                    Clear Filter
+                                </button>
+                            )}
+
+                            <button type="button" className="audit-log-filter-button" onClick={onFilterClick}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M3 4h18l-7 8v6l-4 2v-8z" />
+                                </svg>
+                                Filter
+                                {activeCount > 0 && <span className="gcl-filter-count">{activeCount}</span>}
+                            </button>
+                        </div>
+
+                        {children}
+
+                        {showFilters && (
+                            <div className="audit-log-filter-panel" role="region" aria-label="Ledger Filters">
+                                <div className="audit-log-filter-field">
+                                    <label htmlFor="filter1">Action Type:</label>
+                                    <select id="filter1" value={filters.action} onChange={(event) => applyFilters({ ...filters, action: event.target.value })}>
+                                        <option value="">All CoC Actions</option>
+                                        {Object.keys(ACTION_BADGES).map((action) => (
+                                            <option key={action} value={action}>{ACTION_BADGES[action].label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="audit-log-filter-field">
+                                    <label htmlFor="filter2">Target Incident Case</label>
+                                    <select id="filter2" value={filters.incidentId} onChange={(event) => applyFilters({ ...filters, incidentId: event.target.value })}>
+                                        <option value="">All Incidents</option>
+                                        {incidentOptions.map((incident) => (
+                                            <option key={incident.id} value={incident.id}>{incident.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="audit-log-filter-field">
+                                    <label htmlFor="filter3">Date Range:</label>
+                                    <div className="audit-filter-dates">
+                                        <input
+                                            type="date"
+                                            value={filters.startDate}
+                                            onChange={(event) => applyFilters({ ...filters, startDate: event.target.value })}
+                                        />
+                                        <input
+                                            type="date"
+                                            value={filters.endDate}
+                                            onChange={(event) => applyFilters({ ...filters, endDate: event.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="audit-log-body">
+                            {filteredEntries.length === 0 ? (
+                                <p className="audit-empty">No Chain of Custody records found.</p>
+                            ) : (
+                                <>
+                                    <table className="audit-log-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Action</th>
+                                                <th>Name</th>
+                                                <th>Role</th>
+                                                <th>Client IP</th>
+                                                <th>Forensic Details</th>
+                                                <th>Timestamp</th>
+                                                <th className="audit-inspect">Inspect</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredEntries.map((entry) => (
+                                                <tr key={entry.id} className={entry.action === 'VERIFY_FAIL' ? 'tamper-detected' : ''}>
+                                                    <td><ActionBadge action={entry.action} /></td>
+                                                    <td>{entry.actor}</td>
+                                                    <td><RoleBadge role={entry.role} /></td>
+                                                    <td className="gcl-mono">{entry.ip}</td>
+                                                    <td>{entry.details || '—'}</td>
+                                                    <td className="gcl-mono">{new Date(entry.timestamp).toLocaleString()}</td>
+                                                    <td className="gcl-td-right">
+											<button type="button" className="audit-inspect-btn" onClick={() => setInspectedEntry(entry)}>
+												Inspect
+											</button> </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+
+
+                                </>
+                            )}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </>
+    );
 }
