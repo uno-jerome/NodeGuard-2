@@ -60,6 +60,7 @@ export const verifyEvidence = async (req, res) => {
 
 export const streamEvidence = async (req, res) => {
   try {
+    const isPreview = req.query.disposition === 'inline';
     const evidence = await EvidenceFile.findById(req.params.id);
     if (!evidence) {
       return res.status(404).json({ success: false, message: 'Evidence file not found.' });
@@ -74,13 +75,16 @@ export const streamEvidence = async (req, res) => {
       incidentId: evidence.incidentId,
       evidenceFileId: evidence._id,
       performedBy: req.user?.id || null,
-      action: 'DOWNLOAD',
-      details: `Evidence file downloaded: ${evidence.originalFilename}`,
+      action: isPreview ? 'VIEW' : 'DOWNLOAD',
+      details: isPreview
+        ? `Evidence file previewed: ${evidence.originalFilename}`
+        : `Evidence file downloaded: ${evidence.originalFilename}`,
       calculatedHash: evidence.sha256Hash,
       ipAddress: req.ip || '127.0.0.1',
     });
 
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(evidence.originalFilename)}"`);
+    const disposition = isPreview ? 'inline' : 'attachment';
+    res.setHeader('Content-Disposition', `${disposition}; filename="${encodeURIComponent(evidence.originalFilename)}"`);
     res.setHeader('Content-Type', evidence.mimeType || 'application/octet-stream');
     res.setHeader('Content-Length', evidence.fileSize);
 

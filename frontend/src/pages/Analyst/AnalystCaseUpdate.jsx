@@ -1,5 +1,5 @@
 import AnalystHeader from "../../Components/navbar/AnalystHeader";
-import { ArrowLeft, Paperclip, Plus } from "lucide-react";
+import { ArrowLeft, Download, Eye, Paperclip, Plus, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
@@ -14,6 +14,30 @@ const formatDisplayDate = (dateValue) => {
   return date.toLocaleDateString("en-CA");
 };
 
+const formatFileSize = (sizeValue) => {
+  const bytes = Number(sizeValue);
+  if (!Number.isFinite(bytes) || bytes < 0) return "Size unavailable";
+  if (bytes < 1024) return `${bytes} B`;
+
+  const units = ["KB", "MB", "GB"];
+  let size = bytes / 1024;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+  return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
+};
+
+const getEvidencePreviewKind = (file) => {
+  const mimeType = String(file.mimeType || "").toLowerCase();
+  const extension = String(file.originalFilename || "").split(".").pop()?.toLowerCase();
+  if (mimeType.startsWith("image/") || ["png", "jpg", "jpeg"].includes(extension)) return "image";
+  if (mimeType === "application/pdf" || extension === "pdf") return "pdf";
+  if (mimeType.startsWith("text/") || mimeType === "message/rfc822" || ["txt", "csv", "log", "eml"].includes(extension)) return "text";
+  return "unsupported";
+};
+
 export default function AnalystCaseUpdate() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [caseId, setCaseId] = useState(searchParams.get("trackingId") || "");
@@ -24,6 +48,10 @@ export default function AnalystCaseUpdate() {
   const [localNotes, setLocalNotes] = useState([]);
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [noteError, setNoteError] = useState("");
+  const [evidencePreview, setEvidencePreview] = useState(null);
+  const [previewingFileId, setPreviewingFileId] = useState("");
+  const [downloadingFileId, setDownloadingFileId] = useState("");
+  const [evidenceActionError, setEvidenceActionError] = useState("");
   const noteInputRef = useRef(null);
 
   const loadIncident = useCallback(async (trackingIdValue) => {
@@ -87,6 +115,56 @@ export default function AnalystCaseUpdate() {
     noteInputRef.current.style.height = "auto";
     noteInputRef.current.style.height = `${Math.max(noteInputRef.current.scrollHeight, 88)}px`;
   }, [noteDraft]);
+
+  useEffect(() => () => {
+    if (evidencePreview?.url) URL.revokeObjectURL(evidencePreview.url);
+  }, [evidencePreview]);
+
+  const previewEvidenceFile = async (file) => {
+    if (!file._id || previewingFileId) return;
+
+    setPreviewingFileId(file._id);
+    setEvidenceActionError("");
+    try {
+      const response = await axiosClient.get(`/evidence/${file._id}/download`, {
+        params: { disposition: "inline" },
+        responseType: "blob",
+      });
+      const kind = getEvidencePreviewKind(file);
+      const preview = kind === "text"
+        ? { file, kind, text: await response.data.text() }
+        : { file, kind, url: URL.createObjectURL(response.data) };
+      setEvidencePreview(preview);
+    } catch {
+      setEvidenceActionError(`Unable to preview ${file.originalFilename || "this file"}. Please try again.`);
+    } finally {
+      setPreviewingFileId("");
+    }
+  };
+
+  const downloadEvidenceFile = async (file) => {
+    if (!file._id || downloadingFileId) return;
+
+    setDownloadingFileId(file._id);
+    setEvidenceActionError("");
+    try {
+      const response = await axiosClient.get(`/evidence/${file._id}/download`, { responseType: "blob" });
+      const downloadUrl = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = file.originalFilename || "evidence-file";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    } catch {
+      setEvidenceActionError(`Unable to download ${file.originalFilename || "this file"}. Please try again.`);
+    } finally {
+      setDownloadingFileId("");
+    }
+  };
+
+  const closeEvidencePreview = () => setEvidencePreview(null);
 
   const addInternalNote = async () => {
     const trimmed = noteDraft.trim();
@@ -205,10 +283,43 @@ export default function AnalystCaseUpdate() {
                     </div>
 
                     <div className="secondary-text">Files: {incident.evidenceFiles?.length || 0}</div>
+                    {evidenceActionError && <p className="evidence-action-error" role="alert">{evidenceActionError}</p>}
 
-                    <div className="empty-file-box">
-                      {incident.evidenceFiles?.length ? "Evidence file summary will appear here." : "No Files Attached To This Case"}
-                    </div>
+                    {incident.evidenceFiles?.length ? (
+                      <div className="evidence-file-list" role="list" aria-label="Attached evidence files">
+                        {incident.evidenceFiles.map((file, index) => (
+                          <div className="evidence-file-item" role="listitem" key={file._id || file.originalFilename || index}>
+                            <span className="evidence-file-icon"><Paperclip size={16} aria-hidden="true" /></span>
+                            <span className="evidence-file-details">
+                              <strong title={file.originalFilename}>{file.originalFilename || "Evidence file"}</strong>
+                              <span>{formatFileSize(file.fileSize)} <span aria-hidden="true">·</span> {file.mimeType || "Unknown file type"}</span>
+                            </span>
+                            <span className="evidence-file-actions">
+                              <button
+                                type="button"
+                                onClick={() => previewEvidenceFile(file)}
+                                disabled={getEvidencePreviewKind(file) === "unsupported" || Boolean(previewingFileId)}
+                                aria-label={`Preview ${file.originalFilename || "evidence file"}`}
+                                title={getEvidencePreviewKind(file) === "unsupported" ? "Preview not available for this file type" : "Preview file"}
+                              >
+                                <Eye size={16} aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => downloadEvidenceFile(file)}
+                                disabled={Boolean(downloadingFileId)}
+                                aria-label={`Download ${file.originalFilename || "evidence file"}`}
+                                title="Download file"
+                              >
+                                <Download size={16} aria-hidden="true" />
+                              </button>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="empty-file-box">No Files Attached To This Case</div>
+                    )}
 
                     <div className="chain-log">
                       <div className="chain-log-header">
@@ -280,6 +391,30 @@ export default function AnalystCaseUpdate() {
           )}
         </div>
       </main>
+
+      {evidencePreview && (
+        <div className="analyst-evidence-preview-backdrop" onClick={closeEvidencePreview}>
+          <section
+            className="analyst-evidence-preview"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Preview of ${evidencePreview.file.originalFilename || "evidence file"}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="analyst-evidence-preview-header">
+              <strong title={evidencePreview.file.originalFilename}>{evidencePreview.file.originalFilename || "Evidence preview"}</strong>
+              <button type="button" onClick={closeEvidencePreview} aria-label="Close preview" title="Close preview">
+                <X size={18} aria-hidden="true" />
+              </button>
+            </header>
+            <div className="analyst-evidence-preview-content">
+              {evidencePreview.kind === "image" && <img src={evidencePreview.url} alt={evidencePreview.file.originalFilename || "Evidence file preview"} />}
+              {evidencePreview.kind === "pdf" && <iframe src={evidencePreview.url} title={`Preview of ${evidencePreview.file.originalFilename}`} />}
+              {evidencePreview.kind === "text" && <pre>{evidencePreview.text}</pre>}
+            </div>
+          </section>
+        </div>
+      )}
     </>
   );
 }
