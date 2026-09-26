@@ -400,6 +400,70 @@
   line-height: 1.5;
 }
 
+.report-tracking-id-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.report-success-dialog .report-tracking-id {
+  min-width: 0;
+  margin: 10px 0 18px;
+  overflow-wrap: anywhere;
+}
+
+.report-success-dialog .report-copy-tracking-id {
+  display: grid;
+  flex: 0 0 36px;
+  place-items: center;
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 8px;
+}
+
+.report-success-dialog .report-copy-tracking-id:hover,
+.report-success-dialog .report-copy-tracking-id:focus-visible {
+  background: rgba(75, 104, 150, 0.48);
+}
+
+.report-copy-feedback {
+  width: 100%;
+  margin: -12px 0 14px !important;
+  color: #9de3ba !important;
+  font-size: 12px !important;
+}
+
+.report-tracking-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 20px;
+  padding: 13px 14px;
+  border: 1px solid rgba(233, 178, 27, 0.42);
+  border-radius: 10px;
+  background: rgba(92, 70, 10, 0.22);
+  color: #e9b21b;
+  text-align: left;
+}
+
+.report-tracking-warning > svg {
+  flex: 0 0 22px;
+  margin-top: 2px;
+}
+
+.report-success-dialog .report-tracking-warning p {
+  margin: 0;
+  color: #e8d38d;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+
 .report-success-dialog button {
   min-height: 42px;
   padding: 0 18px;
