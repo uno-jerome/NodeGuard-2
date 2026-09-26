@@ -1,16 +1,24 @@
 import ClientHeader from "../../Components/navbar/ClientHeader";
 import Calendar from "../../Components/calendar/calendar";
-import { CalendarDays, FileUp, ShieldAlert, UploadCloud, X } from "lucide-react";
+import { CalendarDays, CheckCircle2, FileUp, ShieldAlert, UploadCloud, X } from "lucide-react";
+import axiosClient from "../../api/axiosClient";
+import { useNavigate } from "react-router-dom";
 import "../../Components/design/client/IncidentReport.css";
 
 import { useEffect, useRef, useState } from "react";
 
 export default function IncidentReport() {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("");
   const [incidentDate, setIncidentDate] = useState("");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [incidentDateError, setIncidentDateError] = useState("");
+  const [invalidFields, setInvalidFields] = useState([]);
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  const [trackingId, setTrackingId] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [evidenceFiles, setEvidenceFiles] = useState([]);
   const [evidenceError, setEvidenceError] = useState("");
   const [previewFile, setPreviewFile] = useState(null);
@@ -54,8 +62,21 @@ export default function IncidentReport() {
     return `${month}/${day}/${year}`;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setSubmitError("");
+
+    const missingFields = Array.from(event.currentTarget.querySelectorAll("[data-required-field]"))
+      .filter((field) => !field.value.trim())
+      .map((field) => field.dataset.requiredField);
+
+    if (evidenceFiles.length === 0) missingFields.push("evidence");
+    setInvalidFields(missingFields);
+
+    if (missingFields.length > 0) {
+      setIncidentDateError("");
+      return;
+    }
 
     if (incidentDate && incidentDate > new Date().toISOString().slice(0, 10)) {
       setIncidentDateError("Incident date cannot be later than today.");
@@ -63,6 +84,27 @@ export default function IncidentReport() {
     }
 
     setIncidentDateError("");
+
+    const formData = new FormData(event.currentTarget);
+    formData.set("incidentDate", incidentDate);
+    evidenceFiles.forEach((file) => formData.append("files", file));
+
+    setIsSubmitting(true);
+    try {
+      const response = await axiosClient.post("/incidents", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setTrackingId(response.data.trackingId);
+      setIsSuccessDialogOpen(true);
+    } catch (error) {
+      setSubmitError(error.response?.data?.message || "Unable to submit the report. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const clearFieldError = (fieldName) => {
+    setInvalidFields((fields) => fields.filter((field) => field !== fieldName));
   };
 
   const handleEvidenceSelection = (event) => {
@@ -87,6 +129,7 @@ export default function IncidentReport() {
     }
 
     setEvidenceFiles((files) => [...files, ...selectedFiles]);
+    clearFieldError("evidence");
     setEvidenceError("");
     event.target.value = "";
   };
@@ -110,12 +153,19 @@ export default function IncidentReport() {
       <ClientHeader />
 
       <main className="incident-report-shell">
-        <form className="incident-report-form" onSubmit={handleSubmit}>
+        <form className="incident-report-form" onSubmit={handleSubmit} noValidate>
           <label className="field">
             <span className="field-label">
               Incident Title/Headline <span className="required">*</span>
             </span>
-            <input type="text" className="text-input" />
+            <input
+              type="text"
+              name="title"
+              data-required-field="incidentTitle"
+              required
+              className={`text-input${invalidFields.includes("incidentTitle") ? " input-invalid" : ""}`}
+              onChange={() => clearFieldError("incidentTitle")}
+            />
           </label>
 
           <div className="two-col">
@@ -125,8 +175,14 @@ export default function IncidentReport() {
               </span>
               <select
                 value={selectedCategory}
-                onChange={(event) => setSelectedCategory(event.target.value)}
-                className="select-input"
+                                name="category"
+                onChange={(event) => {
+                  setSelectedCategory(event.target.value);
+                  clearFieldError("incidentCategory");
+                }}
+                data-required-field="incidentCategory"
+                required
+                className={`select-input${invalidFields.includes("incidentCategory") ? " input-invalid" : ""}`}
                 style={{
                   backgroundImage:
                     "linear-gradient(45deg, transparent 50%, #dfeeff 50%), linear-gradient(135deg, #dfeeff 50%, transparent 50%)",
@@ -136,34 +192,38 @@ export default function IncidentReport() {
                 }}
               >
                 <option value="" disabled>Select category</option>
-                <option value="phishing">Phishing</option>
-                <option value="smishing-vishing">Smishing / Vishing</option>
-                <option value="identity-theft">Identity Theft</option>
-                <option value="account-takeover">Account Takeover</option>
-                <option value="financial-fraud">Financial Fraud</option>
-                <option value="business-email-compromise">Business Email Compromise</option>
-                <option value="ransomware">Ransomware</option>
-                <option value="malware">Malware / Spyware</option>
-                <option value="credential-stuffing">Credential Stuffing</option>
-                <option value="data-breach">Data Breach</option>
-                <option value="online-harassment">Online Harassment / Cyberbullying</option>
-                <option value="impersonation">Impersonation / Fake Profiles</option>
-                <option value="extortion">Extortion</option>
-                <option value="crypto-scam">Crypto Scam</option>
-                <option value="social-engineering">Social Engineering</option>
-                <option value="other">Other</option>
+                <option value="Phishing">Phishing</option>
+                <option value="Smishing / Vishing">Smishing / Vishing</option>
+                <option value="Identity Theft">Identity Theft</option>
+                <option value="Account Takeover">Account Takeover</option>
+                <option value="Financial Fraud">Financial Fraud</option>
+                <option value="Business Email Compromise">Business Email Compromise</option>
+                <option value="Ransomware">Ransomware</option>
+                <option value="Malware / Spyware">Malware / Spyware</option>
+                <option value="Credential Stuffing">Credential Stuffing</option>
+                <option value="Data Breach">Data Breach</option>
+                <option value="Online Harassment / Cyberbullying">Online Harassment / Cyberbullying</option>
+                <option value="Impersonation / Fake Profiles">Impersonation / Fake Profiles</option>
+                <option value="Extortion">Extortion</option>
+                <option value="Crypto Scam">Crypto Scam</option>
+                <option value="Social Engineering">Social Engineering</option>
+                <option value="Other">Other</option>
               </select>
             </label>
 
-            {selectedCategory === "other" && (
+            {selectedCategory === "Other" && (
               <label className="field">
                 <span className="field-label">
                   Please specify <span className="required">*</span>
                 </span>
                 <input
                   type="text"
+                  name="categoryDetails"
                   placeholder="Describe the incident category"
-                  className="text-input"
+                  data-required-field="otherCategory"
+                  required
+                  className={`text-input${invalidFields.includes("otherCategory") ? " input-invalid" : ""}`}
+                  onChange={() => clearFieldError("otherCategory")}
                 />
               </label>
             )}
@@ -175,8 +235,11 @@ export default function IncidentReport() {
               <div className="input-with-icon" ref={calendarContainerRef}>
                 <input
                   type="text"
+                  name="incidentDate"
                   placeholder="MM/DD/YYYY"
-                  className="text-input date-input"
+                  data-required-field="incidentDate"
+                  required
+                  className={`text-input date-input${invalidFields.includes("incidentDate") ? " input-invalid" : ""}`}
                   value={formatIncidentDate(incidentDate)}
                   readOnly
                 />
@@ -197,6 +260,7 @@ export default function IncidentReport() {
                       onChange={(dateValue) => {
                         setIncidentDate(dateValue);
                         setIncidentDateError("");
+                        clearFieldError("incidentDate");
                       }}
                     />
                   </div>
@@ -213,35 +277,45 @@ export default function IncidentReport() {
               </span>
               <select
                 value={selectedPlatform}
-                onChange={(event) => setSelectedPlatform(event.target.value)}
-                className="select-input"
+                                name="platform"
+                onChange={(event) => {
+                  setSelectedPlatform(event.target.value);
+                  clearFieldError("platform");
+                }}
+                data-required-field="platform"
+                required
+                className={`select-input${invalidFields.includes("platform") ? " input-invalid" : ""}`}
               >
                 <option value="" disabled>Choose platform</option>
-                <option value="email">Email</option>
-                <option value="sms">SMS</option>
-                <option value="phone-call">Phone Call</option>
-                <option value="social-media">Social Media</option>
-                <option value="messenger">Messaging App</option>
-                <option value="banking-app">Banking / Payment App</option>
-                <option value="online-shopping">Online Shopping Platform</option>
-                <option value="gaming">Gaming Platform</option>
-                <option value="work-platform">Work / Collaboration Platform</option>
-                <option value="website">Website / Web Portal</option>
-                <option value="mobile-app">Mobile App</option>
-                <option value="crypto-platform">Crypto Exchange / Wallet</option>
-                <option value="other">Other</option>
+                <option value="Email">Email</option>
+                <option value="SMS">SMS</option>
+                <option value="Phone Call">Phone Call</option>
+                <option value="Social Media">Social Media</option>
+                <option value="Messaging App">Messaging App</option>
+                <option value="Banking / Payment App">Banking / Payment App</option>
+                <option value="Online Shopping Platform">Online Shopping Platform</option>
+                <option value="Gaming Platform">Gaming Platform</option>
+                <option value="Work / Collaboration Platform">Work / Collaboration Platform</option>
+                <option value="Website / Web Portal">Website / Web Portal</option>
+                <option value="Mobile App">Mobile App</option>
+                <option value="Crypto Exchange / Wallet">Crypto Exchange / Wallet</option>
+                <option value="Other">Other</option>
               </select>
             </label>
 
-            {selectedPlatform === "other" && (
+            {selectedPlatform === "Other" && (
               <label className="field">
                 <span className="field-label">
                   Please specify <span className="required">*</span>
                 </span>
                 <input
                   type="text"
+                  name="platformDetails"
                   placeholder="Describe the platform or channel"
-                  className="text-input"
+                  data-required-field="otherPlatform"
+                  required
+                  className={`text-input${invalidFields.includes("otherPlatform") ? " input-invalid" : ""}`}
+                  onChange={() => clearFieldError("otherPlatform")}
                 />
               </label>
             )}
@@ -252,7 +326,17 @@ export default function IncidentReport() {
               </span>
               <div className="currency-field">
                 <span className="currency-symbol">PHP</span>
-                <input type="number" step="0.01" min="0" placeholder="0.00" className="currency-input" />
+                <input
+                  type="number"
+                  name="estimatedLoss"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  data-required-field="financialLoss"
+                  required
+                  className={`currency-input${invalidFields.includes("financialLoss") ? " input-invalid" : ""}`}
+                  onChange={() => clearFieldError("financialLoss")}
+                />
               </div>
             </label>
           </div>
@@ -261,14 +345,28 @@ export default function IncidentReport() {
             <span className="field-label">
               Suspect Identifiers <span className="required">*</span>
             </span>
-            <input type="text" className="text-input" />
+            <input
+              type="text"
+              name="suspectIdentifiers"
+              data-required-field="suspectIdentifiers"
+              required
+              className={`text-input${invalidFields.includes("suspectIdentifiers") ? " input-invalid" : ""}`}
+              onChange={() => clearFieldError("suspectIdentifiers")}
+            />
           </label>
 
           <label className="field">
             <span className="field-label">
               Chronological Summary of What Happened <span className="required">*</span>
             </span>
-            <textarea rows="7" className="textarea-input" />
+            <textarea
+              rows="7"
+              name="narrative"
+              data-required-field="incidentSummary"
+              required
+              className={`textarea-input${invalidFields.includes("incidentSummary") ? " input-invalid" : ""}`}
+              onChange={() => clearFieldError("incidentSummary")}
+            />
           </label>
 
           <div className="complaint-panel">
@@ -282,12 +380,12 @@ export default function IncidentReport() {
             <div className="two-col complaint-grid">
               <label className="field">
                 <span className="field-label">Your Name</span>
-                <input type="text" placeholder="Leave Blank for Anonymous" className="text-input" />
+                <input type="text" name="complainantName" placeholder="Leave Blank for Anonymous" className="text-input" />
               </label>
 
               <label className="field">
                 <span className="field-label">Contact Number or Email</span>
-                <input type="text" className="text-input" />
+                <input type="text" name="complainantContact" className="text-input" />
               </label>
             </div>
           </div>
@@ -300,7 +398,7 @@ export default function IncidentReport() {
             </label>
 
             <div
-              className="upload-box"
+              className={`upload-box${invalidFields.includes("evidence") ? " input-invalid" : ""}`}
               role="button"
               tabIndex="0"
               onClick={openEvidencePicker}
@@ -370,14 +468,40 @@ export default function IncidentReport() {
             </p>
           </div>
 
+          {submitError && <p className="field-error" role="alert">{submitError}</p>}
+
           <div className="form-footer">
             <p>
               Fields marked with <span className="required-inline">*</span> are required for official intake.
             </p>
-            <button type="submit" className="submit-button">Submit</button>
+            <button type="submit" className="submit-button" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </button>
           </div>
         </form>
       </main>
+
+      {isSuccessDialogOpen && (
+        <div className="report-success-backdrop">
+          <section
+            className="report-success-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="report-success-title"
+            aria-describedby="report-success-message"
+          >
+            <div className="report-success-icon">
+              <CheckCircle2 size={28} />
+            </div>
+            <h2 id="report-success-title">Report submitted</h2>
+            <p id="report-success-message">You have successfully submitted a report.</p>
+            <p className="report-tracking-id">Tracking ID: <strong>{trackingId}</strong></p>
+            <button type="button" onClick={() => navigate("/client")} autoFocus>
+              Return to Home
+            </button>
+          </section>
+        </div>
+      )}
 
       {previewFile && (
         <div className="file-preview-backdrop" role="presentation" onClick={() => setPreviewFile(null)}>
