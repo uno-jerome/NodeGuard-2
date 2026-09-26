@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import "../../Components/design/Admin/AuditLog.css";
 import searchIcon from "../../public/search_icon.svg";
+import { AuditLogInspectorModal } from "../../Components/Elements/auditInspect";
+import { DEFAULT_ENTRIES } from "../../constants/auditLogDefaults";
 
 export const Ledger_Header = {
     title: 'Global Custody Ledger',
@@ -9,68 +11,7 @@ export const Ledger_Header = {
 
 const EMPTY_FILTERS = { action: '', incidentId: '', startDate: '', endDate: '' };
 
-const DEFAULT_ENTRIES = [
-    {
-        id: 1,
-        action: 'VERIFY_FAIL',
-        actor: 'A. Hart',
-        role: 'Investigator',
-        ip: '10.0.0.12',
-        details: 'Hash mismatch detected during evidence intake verification.',
-        timestamp: '2026-09-24T14:22:00Z',
-        incidentId: 'INC-1024',
-    },
-    {
-        id: 2,
-        action: 'VERIFY_PASS',
-        actor: 'M. Cole',
-        role: 'Admin',
-        ip: '10.0.0.41',
-        details: 'Evidence chain verified and sealed successfully.',
-        timestamp: '2026-09-23T09:10:00Z',
-        incidentId: 'INC-860',
-    },
-    {
-        id: 3,
-        action: 'INGESTION',
-        actor: 'R. Patel',
-        role: 'Client',
-        ip: '10.0.0.77',
-        details: 'New forensic artifact uploaded from client packet.',
-        timestamp: '2026-09-20T18:15:00Z',
-        incidentId: 'INC-403',
-    },
-    {
-        id: 4,
-        action: 'STATUS_CHANGE',
-        actor: 'K. James',
-        role: 'Investigator',
-        ip: '10.0.0.28',
-        details: 'Case status changed from investigation to review.',
-        timestamp: '2026-09-19T11:42:00Z',
-        incidentId: 'INC-219',
-    },
-    {
-        id: 5,
-        action: 'VIEW',
-        actor: 'S. Lin',
-        role: 'Admin',
-        ip: '10.0.0.19',
-        details: 'Incident evidence review opened by administrator.',
-        timestamp: '2026-09-18T08:35:00Z',
-        incidentId: 'INC-1024',
-    },
-    {
-        id: 6,
-        action: 'DOWNLOAD',
-        actor: 'D. Ross',
-        role: 'Client',
-        ip: '10.0.0.91',
-        details: 'Case archive package downloaded for legal review.',
-        timestamp: '2026-09-17T16:04:00Z',
-        incidentId: 'INC-860',
-    },
-];
+
 
 const ACTION_BADGES = {
     VERIFY_FAIL: {
@@ -332,6 +273,7 @@ export default function AuditLog({
                                 </>
                             )}
                         </div>
+                        <AuditLogInspectorModal entry={inspectedEntry} onClose={() => setInspectedEntry(null)} />
                     </section>
                 </div>
             </div>
