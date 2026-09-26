@@ -4,7 +4,6 @@ import { CalendarDays, CheckCircle2, FileUp, ShieldAlert, UploadCloud, X } from 
 import axiosClient from "../../api/axiosClient";
 import { useNavigate } from "react-router-dom";
 import "../../Components/design/client/IncidentReport.css";
-
 import { useEffect, useRef, useState } from "react";
 
 export default function IncidentReport() {

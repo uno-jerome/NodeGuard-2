@@ -16,11 +16,11 @@ export default function ClientHeader() {
 
   return (
     <header className="client-header">
-      <button className="logo-container" type="button" onClick={() => navigate("/client")} aria-label="NodeGuard home">
+      <div className="logo-container" >
         <img src={logoIcon} alt="" className="client-header-icon" />
         <img src={LogoName} alt="NodeGuard" className="client-header-name" />
-      </button>
-
+      </div>
+    
       <nav className="client-navbar" aria-label="Main navigation">
         <span className="client-navbar-pill" aria-hidden="true" />
         {navigationItems.map((item) => (
