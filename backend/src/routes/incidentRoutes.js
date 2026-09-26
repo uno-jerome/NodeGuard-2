@@ -13,7 +13,7 @@ import { upload } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
-router.post('/', upload.single('file'), createPublicIncident);
+router.post('/', upload.array('files'), createPublicIncident);
 router.get('/track/:trackingId', getIncidentByTrackingId);
 router.get('/', verifyToken, getIncidents);
 router.get('/:id', verifyToken, getIncidentById);
