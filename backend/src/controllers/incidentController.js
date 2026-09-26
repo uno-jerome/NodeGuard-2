@@ -10,7 +10,7 @@ export const createPublicIncident = async (req, res) => {
     if (!title || !category || !narrative) {
       return res.status(400).json({ success: false, message: 'Title, category, and narrative are required.' });
     }
-    const { trackingId } = await registerPublicIncident(req.body, req.file, req.ip);
+    const { trackingId } = await registerPublicIncident(req.body, req.files, req.ip);
     return res.status(201).json({ success: true, trackingId });
   } catch (error) {
     return res.status(500).json({ success: false, message: `Failed to create incident: ${error.message}` });
