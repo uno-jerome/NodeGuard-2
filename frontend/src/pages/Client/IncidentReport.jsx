@@ -518,9 +518,18 @@ export default function IncidentReport() {
               </button>
             </div>
             {copyFeedback && <p className="report-copy-feedback" role="status">{copyFeedback}</p>}
-            <button type="button" onClick={() => navigate("/client")} autoFocus>
-              Return to Home
-            </button>
+            <div className="report-success-actions">
+              <button
+                type="button"
+                onClick={() => navigate(`/client/track?trackingId=${encodeURIComponent(trackingId)}`)}
+                autoFocus
+              >
+                Go to Track Case
+              </button>
+              <button type="button" onClick={() => navigate("/client")}>
+                Return to Home
+              </button>
+            </div>
             <div className="report-tracking-warning" role="note">
               <ShieldAlert size={22} aria-hidden="true" />
               <p><strong>IMPORTANT:</strong> Do not lose this tracking key. Because no user accounts are created, this key is the only way to access public case updates.</p>

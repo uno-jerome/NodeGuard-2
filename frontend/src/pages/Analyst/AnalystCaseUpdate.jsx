@@ -1,9 +1,11 @@
 import AnalystHeader from "../../Components/navbar/AnalystHeader";
-import { ArrowLeft, Download, Eye, Paperclip, Plus, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Download, Eye, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
 import "../../Components/design/AnalystCaseUpdate.css";
+
+const INCIDENT_STATUSES = ["Reported", "Under Review", "Investigating", "Resolved", "Closed"];
 
 const normalizeTrackingId = (value) => String(value || "").trim().toUpperCase().replace(/\s+/g, "");
 
@@ -44,11 +46,15 @@ export default function AnalystCaseUpdate() {
   const [incident, setIncident] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [statusError, setStatusError] = useState("");
   const [noteDraft, setNoteDraft] = useState("");
   const [localNotes, setLocalNotes] = useState([]);
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [noteError, setNoteError] = useState("");
   const [evidencePreview, setEvidencePreview] = useState(null);
+  const [isVerifyingEvidence, setIsVerifyingEvidence] = useState(false);
+  const [evidenceVerification, setEvidenceVerification] = useState({});
   const [previewingFileId, setPreviewingFileId] = useState("");
   const [downloadingFileId, setDownloadingFileId] = useState("");
   const [evidenceActionError, setEvidenceActionError] = useState("");
@@ -75,6 +81,9 @@ export default function AnalystCaseUpdate() {
       }
 
       setIncident(found);
+      setEvidenceVerification(Object.fromEntries(
+        (found.evidenceFiles || []).filter((file) => file?._id).map((file) => [file._id, file.verificationStatus || 'not-verified'])
+      ));
       setCaseId(found.trackingId);
       const nextParams = new URLSearchParams(searchParams);
       nextParams.set("trackingId", found.trackingId);
@@ -103,6 +112,23 @@ export default function AnalystCaseUpdate() {
   const handleSubmit = (event) => {
     event.preventDefault();
     loadIncident(caseId);
+  };
+
+  const updateCaseStatus = async (status) => {
+    if (!incident?._id || isUpdatingStatus || status === incident.status) return;
+
+    setIsUpdatingStatus(true);
+    setStatusError("");
+    try {
+      const response = await axiosClient.patch(`/incidents/${incident._id}/status`, { status });
+      setIncident((currentIncident) => currentIncident
+        ? { ...currentIncident, status: response.data.incident.status }
+        : currentIncident);
+    } catch (requestError) {
+      setStatusError(requestError.response?.data?.message || "Unable to update case status. Please try again.");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   useEffect(() => {
@@ -165,6 +191,48 @@ export default function AnalystCaseUpdate() {
   };
 
   const closeEvidencePreview = () => setEvidencePreview(null);
+
+  const verifyEvidenceFiles = async () => {
+    const files = incident?.evidenceFiles || [];
+    if (!files.length || isVerifyingEvidence) return;
+
+    setIsVerifyingEvidence(true);
+    setEvidenceActionError("");
+    setEvidenceVerification((current) => ({
+      ...current,
+      ...Object.fromEntries(files.filter((file) => file._id).map((file) => [file._id, "verifying"])),
+    }));
+
+    const results = await Promise.all(files.map(async (file) => {
+      if (!file._id) return [file._id, "error"];
+      try {
+        const response = await axiosClient.post(`/evidence/${file._id}/verify`);
+        const verificationStatus = response.data.verificationStatus || (response.data.match ? "verified" : "mismatch");
+        return [file._id, verificationStatus];
+      } catch {
+        return [file._id, "error"];
+      }
+    }));
+
+    const savedVerificationMap = Object.fromEntries(results);
+    setEvidenceVerification((current) => ({ ...current, ...savedVerificationMap }));
+    setIncident((currentIncident) => {
+      if (!currentIncident) return currentIncident;
+      return {
+        ...currentIncident,
+        evidenceFiles: (currentIncident.evidenceFiles || []).map((file) => {
+          const updatedStatus = savedVerificationMap[file._id];
+          if (!updatedStatus) return file;
+          return {
+            ...file,
+            verificationStatus: updatedStatus,
+            verifiedAt: new Date().toISOString(),
+          };
+        }),
+      };
+    });
+    setIsVerifyingEvidence(false);
+  };
 
   const addInternalNote = async () => {
     const trimmed = noteDraft.trim();
@@ -233,7 +301,6 @@ export default function AnalystCaseUpdate() {
 
                   <div className="case-status-stack">
                     <span className={`status-pill ${statusTone}`}>
-                      <span className="dot" />
                       {incident.status}
                     </span>
                   </div>
@@ -276,10 +343,21 @@ export default function AnalystCaseUpdate() {
                           Securely stored evidence files. Recalculate SHA-256 checksum on demand to verify integrity and ensure compliance with internal standards.
                         </p>
                       </div>
-                      <span className="attachment-badge">
-                        <Paperclip size={14} />
-                        Attached
-                      </span>
+                      <div className="evidence-top-actions">
+                        <span className="attachment-badge">
+                          <Paperclip size={14} />
+                          Attached
+                        </span>
+                        <button
+                          type="button"
+                          className="verify-evidence-button"
+                          onClick={verifyEvidenceFiles}
+                          disabled={!incident.evidenceFiles?.length || isVerifyingEvidence}
+                        >
+                          <ShieldCheck size={13} aria-hidden="true" />
+                          {isVerifyingEvidence ? "Verifying..." : "Verify Evidence Integrity"}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="secondary-text">Files: {incident.evidenceFiles?.length || 0}</div>
@@ -293,6 +371,23 @@ export default function AnalystCaseUpdate() {
                             <span className="evidence-file-details">
                               <strong title={file.originalFilename}>{file.originalFilename || "Evidence file"}</strong>
                               <span>{formatFileSize(file.fileSize)} <span aria-hidden="true">·</span> {file.mimeType || "Unknown file type"}</span>
+                              {(() => {
+                                const verification = evidenceVerification[file._id] || "not-verified";
+                                const VerificationIcon = verification === "verified" ? CheckCircle2 : verification === "mismatch" || verification === "error" ? XCircle : null;
+                                const label = {
+                                  "not-verified": "Not Verified",
+                                  verifying: "Verifying...",
+                                  verified: "Verified",
+                                  mismatch: "Integrity Mismatch",
+                                  error: "Could Not Verify",
+                                }[verification];
+                                return (
+                                  <span className={`evidence-verification-status ${verification}`} role="status">
+                                    {VerificationIcon && <VerificationIcon size={13} aria-hidden="true" />}
+                                    {label}
+                                  </span>
+                                );
+                              })()}
                             </span>
                             <span className="evidence-file-actions">
                               <button
@@ -348,9 +443,20 @@ export default function AnalystCaseUpdate() {
                       <h3>Investigation Status</h3>
                       <div className="status-line">
                         <span>Current State</span>
-                        <strong>{incident.status}</strong>
+                        <strong className={`status-value status-${statusTone}`}>{incident.status}</strong>
                       </div>
-                      <button type="button" className="inline-action">Update Case Status</button>
+                      <label className="status-select-label" htmlFor="case-status-select">Update Case Status</label>
+                      <select
+                        id="case-status-select"
+                        className="status-select"
+                        value={incident.status}
+                        onChange={(event) => updateCaseStatus(event.target.value)}
+                        disabled={isUpdatingStatus}
+                        aria-describedby={statusError ? "case-status-error" : undefined}
+                      >
+                        {INCIDENT_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                      </select>
+                      {statusError && <p className="status-update-error" id="case-status-error" role="alert">{statusError}</p>}
                     </div>
 
                     <div className="status-box notes-box">

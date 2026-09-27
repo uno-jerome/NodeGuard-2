@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ArrowRight, Search } from "lucide-react";
 import ClientHeader from "../../Components/navbar/ClientHeader";
 import axiosClient from "../../api/axiosClient";
@@ -30,14 +31,15 @@ const workflowStages = [
 ];
 
 export default function TrackReport() {
-    const [trackingId, setTrackingId] = useState("");
+    const [searchParams] = useSearchParams();
+    const initialTrackingId = searchParams.get("trackingId") || "";
+    const [trackingId, setTrackingId] = useState(initialTrackingId);
     const [incident, setIncident] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        const normalizedId = trackingId.trim().toUpperCase().replace(/\s+/g, "");
+    const findIncident = useCallback(async (value) => {
+        const normalizedId = value.trim().toUpperCase().replace(/\s+/g, "");
         setIncident(null);
         setError("");
 
@@ -56,6 +58,15 @@ export default function TrackReport() {
         } finally {
             setIsLoading(false);
         }
+    }, []);
+
+    useEffect(() => {
+        if (initialTrackingId) findIncident(initialTrackingId);
+    }, [findIncident, initialTrackingId]);
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        await findIncident(trackingId);
     };
 
     const statusClass = incident?.status?.toLowerCase().replace(/\s+/g, "-") || "";

@@ -62,7 +62,7 @@ export default function AnalystDashboard({ showHeader = true }) {
 						<p className="eyebrow">Forensic operations</p>
 						<h1>Case Management &amp; Investigation Dashboard</h1>
 					</div>
-					<button className="refresh-button" type="button" onClick={loadIncidents} disabled={isLoading}>
+					<button className={`refresh-button ${isLoading ? "loading" : ""}`} type="button" onClick={loadIncidents} disabled={isLoading}>
 						<RefreshCw size={16} className={isLoading ? "spin" : ""} />
 						Refresh cases
 					</button>

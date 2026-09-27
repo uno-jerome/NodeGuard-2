@@ -1,5 +1,6 @@
 
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Log-in";
 import ClientHome from "./pages/Client/Home";
 import IncidentReport from "./pages/Client/IncidentReport";
@@ -11,6 +12,22 @@ import AuditInspectorPreview from "./pages/Admin/AuditInspectorPreview";
 import UserManament from "./pages/Admin/UserManament";
 import AnalystDashboard from "./pages/Analyst/AnalystDashboard";
 import AnalystCaseUpdate from "./pages/Analyst/AnalystCaseUpdate";
+
+function RequireRole({ role }) {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user.role !== role) {
+    const homePath = user.role === "ADMIN"
+      ? "/admin"
+      : user.role === "INVESTIGATOR"
+        ? "/analyst"
+        : "/login";
+    return <Navigate to={homePath} replace />;
+  }
+
+  return <Outlet />;
+}
 
 export default function App() {
   return (
@@ -46,63 +63,67 @@ export default function App() {
           }
         />
 
-        <Route path="/admin"
-          element={
-            <div data-portal="admin" className="portal-container">
-              <AdminDashboard />
-            </div>
-          }
-        />
-        <Route path="/admin/case-update"
-          element={
-            <div data-portal="admin" className="portal-container">
-              <AdminCaseUpdate />
-            </div>
-          }
-        />
-        <Route path="/admin/audit"
-          element={
-            <div data-portal="admin" className="portal-container">
-              <AuditLog />
-            </div>
-          }
-        />
-        <Route path="/admin/audit-inspector-preview"
-          element={
-            <div data-portal="admin" className="portal-container">
-              <AuditInspectorPreview />
-            </div>
-          }
-        />
-        <Route path="/admin/users"
-          element={
-            <div data-portal="admin" className="portal-container">
-              <UserManament />
-            </div>
-          }
-        />
-        <Route path="/admin/users/provision"
-          element={
-            <div data-portal="admin" className="portal-container">
-              <UserManament />
-            </div>
-          }
-        />
+        <Route element={<RequireRole role="ADMIN" />}>
+          <Route path="/admin"
+            element={
+              <div data-portal="admin" className="portal-container">
+                <AdminDashboard />
+              </div>
+            }
+          />
+          <Route path="/admin/case-update"
+            element={
+              <div data-portal="admin" className="portal-container">
+                <AdminCaseUpdate />
+              </div>
+            }
+          />
+          <Route path="/admin/audit"
+            element={
+              <div data-portal="admin" className="portal-container">
+                <AuditLog />
+              </div>
+            }
+          />
+          <Route path="/admin/audit-inspector-preview"
+            element={
+              <div data-portal="admin" className="portal-container">
+                <AuditInspectorPreview />
+              </div>
+            }
+          />
+          <Route path="/admin/users"
+            element={
+              <div data-portal="admin" className="portal-container">
+                <UserManament />
+              </div>
+            }
+          />
+          <Route path="/admin/users/provision"
+            element={
+              <div data-portal="admin" className="portal-container">
+                <UserManament />
+              </div>
+            }
+          />
+        </Route>
 
-        <Route path="/analyst"
-          element={
-            <div data-portal="analyst" className="portal-container">
-              <AnalystDashboard />
-            </div>
-          }
-        />
-        <Route path="/analyst/case-update"
-          element={
-            <div data-portal="analyst" className="portal-container">
-              <AnalystCaseUpdate />
-            </div>
-          }
-        />
+        <Route element={<RequireRole role="INVESTIGATOR" />}>
+          <Route path="/analyst"
+            element={
+              <div data-portal="analyst" className="portal-container">
+                <AnalystDashboard />
+              </div>
+            }
+          />
+          <Route path="/analyst/case-update"
+            element={
+              <div data-portal="analyst" className="portal-container">
+                <AnalystCaseUpdate />
+              </div>
+            }
+          />
+        </Route>
     </Routes>
   );
 }

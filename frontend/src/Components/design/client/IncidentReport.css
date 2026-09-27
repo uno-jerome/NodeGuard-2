@@ -9,6 +9,7 @@
         var(--portal-bg);
   min-height: 100vh;
   color: #f3f8ff;
+  padding: 5px 10px;
 }
 
 .incident-report-shell {
@@ -471,6 +472,19 @@
   text-align: left;
 }
 
+.report-success-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.report-success-actions button {
+  flex: 1;
+  min-width: 0;
+  padding: 0 10px;
+}
+
 .report-success-dialog button {
   min-height: 42px;
   padding: 0 18px;
@@ -488,6 +502,13 @@
   border-color: rgba(129, 200, 255, 0.95);
   background: rgba(75, 104, 150, 0.48);
   outline: none;
+}
+
+@media (max-width: 360px) {
+  .report-success-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
 
 .file-preview-modal {
