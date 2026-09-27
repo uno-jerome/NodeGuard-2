@@ -1,6 +1,6 @@
 import ClientHeader from "../../Components/navbar/ClientHeader";
 import Calendar from "../../Components/calendar/calendar";
-import { CalendarDays, CheckCircle2, FileUp, ShieldAlert, UploadCloud, X } from "lucide-react";
+import { CalendarDays, Check, CheckCircle2, Copy, FileUp, ShieldAlert, UploadCloud, X } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 import { useNavigate } from "react-router-dom";
 import "../../Components/design/client/IncidentReport.css";
@@ -16,6 +16,7 @@ export default function IncidentReport() {
   const [invalidFields, setInvalidFields] = useState([]);
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
   const [trackingId, setTrackingId] = useState("");
+  const [copyFeedback, setCopyFeedback] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [evidenceFiles, setEvidenceFiles] = useState([]);
@@ -94,6 +95,7 @@ export default function IncidentReport() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setTrackingId(response.data.trackingId);
+      setCopyFeedback("");
       setIsSuccessDialogOpen(true);
     } catch (error) {
       setSubmitError(error.response?.data?.message || "Unable to submit the report. Please try again.");
@@ -134,6 +136,15 @@ export default function IncidentReport() {
   };
 
   const openEvidencePicker = () => evidenceInputRef.current?.click();
+
+  const copyTrackingId = async () => {
+    try {
+      await navigator.clipboard.writeText(trackingId);
+      setCopyFeedback("Tracking ID copied.");
+    } catch {
+      setCopyFeedback("Copy is unavailable. Please select and copy the tracking ID.");
+    }
+  };
 
   const removeEvidenceFile = (fileToRemove) => {
     setEvidenceFiles((files) => files.filter((file) => file !== fileToRemove));
@@ -494,10 +505,35 @@ export default function IncidentReport() {
             </div>
             <h2 id="report-success-title">Report submitted</h2>
             <p id="report-success-message">You have successfully submitted a report.</p>
-            <p className="report-tracking-id">Tracking ID: <strong>{trackingId}</strong></p>
-            <button type="button" onClick={() => navigate("/client")} autoFocus>
-              Return to Home
-            </button>
+            <div className="report-tracking-id-row">
+              <p className="report-tracking-id">Tracking ID: <strong>{trackingId}</strong></p>
+              <button
+                type="button"
+                className="report-copy-tracking-id"
+                onClick={copyTrackingId}
+                aria-label={copyFeedback === "Tracking ID copied." ? "Tracking ID copied" : "Copy tracking ID"}
+                title={copyFeedback === "Tracking ID copied." ? "Tracking ID copied" : "Copy tracking ID"}
+              >
+                {copyFeedback === "Tracking ID copied." ? <Check size={17} /> : <Copy size={17} />}
+              </button>
+            </div>
+            {copyFeedback && <p className="report-copy-feedback" role="status">{copyFeedback}</p>}
+            <div className="report-success-actions">
+              <button
+                type="button"
+                onClick={() => navigate(`/client/track?trackingId=${encodeURIComponent(trackingId)}`)}
+                autoFocus
+              >
+                Go to Track Case
+              </button>
+              <button type="button" onClick={() => navigate("/client")}>
+                Return to Home
+              </button>
+            </div>
+            <div className="report-tracking-warning" role="note">
+              <ShieldAlert size={22} aria-hidden="true" />
+              <p><strong>IMPORTANT:</strong> Do not lose this tracking key. Because no user accounts are created, this key is the only way to access public case updates.</p>
+            </div>
           </section>
         </div>
       )}

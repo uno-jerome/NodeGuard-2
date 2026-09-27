@@ -45,10 +45,14 @@
     cursor: pointer; 
     font: inherit; 
 }
-.refresh-button 
+.refresh-button.loading 
 { 
     cursor: wait; 
     opacity: .65; 
+}
+.refresh-button:disabled 
+{ 
+    cursor: not-allowed; 
 }
 .spin 
 { 
@@ -236,7 +240,7 @@ td
     text-align: center; 
     white-space: nowrap; 
 }
-.badge 
+.analyst-dashboard .badge 
 { 
     display: inline-block; 
     border: 1px solid; 
@@ -245,37 +249,40 @@ td
     font-size: 11px; 
     white-space: nowrap; 
 }
-.priority-critical 
+.analyst-dashboard .badge.priority-critical 
 { 
     color: #ff6b96; 
     border-color: #74314b; 
     background: #321225; 
 }
-.priority-high 
+.analyst-dashboard .badge.priority-high 
 { 
     color: #f8c84e; 
     border-color: #725b17; 
     background: #332b0b; 
 }
-.priority-medium, .priority-low 
+.analyst-dashboard .badge.priority-medium,
+.analyst-dashboard .badge.priority-low 
 { 
     color: #6eaeff; 
     border-color: #274d84; 
     background: #0c2142; 
 }
-.status-reported, .status-under-review 
+.analyst-dashboard .badge.status-reported,
+.analyst-dashboard .badge.status-under-review 
 { 
     color: #f8c84e; 
     border-color: #725b17; 
     background: #332b0b; 
 }
-.status-investigating 
+.analyst-dashboard .badge.status-investigating 
 { 
-    color: #6eaeff; 
-    border-color: #274d84; 
-    background: #0c2142; 
+    color: #ff6b96; 
+    border-color: #74314b; 
+    background: #321225; 
 }
-.status-resolved, .status-closed 
+.analyst-dashboard .badge.status-resolved,
+.analyst-dashboard .badge.status-closed 
 { 
     color: #59d36e; 
     border-color: #1e6b32; 

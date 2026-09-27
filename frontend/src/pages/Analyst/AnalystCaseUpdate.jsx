@@ -1,9 +1,11 @@
 import AnalystHeader from "../../Components/navbar/AnalystHeader";
-import { ArrowLeft, Paperclip, Plus } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Download, Eye, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
 import "../../Components/design/AnalystCaseUpdate.css";
+
+const INCIDENT_STATUSES = ["Reported", "Under Review", "Investigating", "Resolved", "Closed"];
 
 const normalizeTrackingId = (value) => String(value || "").trim().toUpperCase().replace(/\s+/g, "");
 
@@ -14,16 +16,48 @@ const formatDisplayDate = (dateValue) => {
   return date.toLocaleDateString("en-CA");
 };
 
+const formatFileSize = (sizeValue) => {
+  const bytes = Number(sizeValue);
+  if (!Number.isFinite(bytes) || bytes < 0) return "Size unavailable";
+  if (bytes < 1024) return `${bytes} B`;
+
+  const units = ["KB", "MB", "GB"];
+  let size = bytes / 1024;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+  return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
+};
+
+const getEvidencePreviewKind = (file) => {
+  const mimeType = String(file.mimeType || "").toLowerCase();
+  const extension = String(file.originalFilename || "").split(".").pop()?.toLowerCase();
+  if (mimeType.startsWith("image/") || ["png", "jpg", "jpeg"].includes(extension)) return "image";
+  if (mimeType === "application/pdf" || extension === "pdf") return "pdf";
+  if (mimeType.startsWith("text/") || mimeType === "message/rfc822" || ["txt", "csv", "log", "eml"].includes(extension)) return "text";
+  return "unsupported";
+};
+
 export default function AnalystCaseUpdate() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [caseId, setCaseId] = useState(searchParams.get("trackingId") || "");
   const [incident, setIncident] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [statusError, setStatusError] = useState("");
   const [noteDraft, setNoteDraft] = useState("");
   const [localNotes, setLocalNotes] = useState([]);
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [noteError, setNoteError] = useState("");
+  const [evidencePreview, setEvidencePreview] = useState(null);
+  const [isVerifyingEvidence, setIsVerifyingEvidence] = useState(false);
+  const [evidenceVerification, setEvidenceVerification] = useState({});
+  const [previewingFileId, setPreviewingFileId] = useState("");
+  const [downloadingFileId, setDownloadingFileId] = useState("");
+  const [evidenceActionError, setEvidenceActionError] = useState("");
   const noteInputRef = useRef(null);
 
   const loadIncident = useCallback(async (trackingIdValue) => {
@@ -47,6 +81,9 @@ export default function AnalystCaseUpdate() {
       }
 
       setIncident(found);
+      setEvidenceVerification(Object.fromEntries(
+        (found.evidenceFiles || []).filter((file) => file?._id).map((file) => [file._id, file.verificationStatus || 'not-verified'])
+      ));
       setCaseId(found.trackingId);
       const nextParams = new URLSearchParams(searchParams);
       nextParams.set("trackingId", found.trackingId);
@@ -77,6 +114,23 @@ export default function AnalystCaseUpdate() {
     loadIncident(caseId);
   };
 
+  const updateCaseStatus = async (status) => {
+    if (!incident?._id || isUpdatingStatus || status === incident.status) return;
+
+    setIsUpdatingStatus(true);
+    setStatusError("");
+    try {
+      const response = await axiosClient.patch(`/incidents/${incident._id}/status`, { status });
+      setIncident((currentIncident) => currentIncident
+        ? { ...currentIncident, status: response.data.incident.status }
+        : currentIncident);
+    } catch (requestError) {
+      setStatusError(requestError.response?.data?.message || "Unable to update case status. Please try again.");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   useEffect(() => {
     setLocalNotes(Array.isArray(incident?.notes) ? incident.notes : []);
     setNoteDraft("");
@@ -87,6 +141,98 @@ export default function AnalystCaseUpdate() {
     noteInputRef.current.style.height = "auto";
     noteInputRef.current.style.height = `${Math.max(noteInputRef.current.scrollHeight, 88)}px`;
   }, [noteDraft]);
+
+  useEffect(() => () => {
+    if (evidencePreview?.url) URL.revokeObjectURL(evidencePreview.url);
+  }, [evidencePreview]);
+
+  const previewEvidenceFile = async (file) => {
+    if (!file._id || previewingFileId) return;
+
+    setPreviewingFileId(file._id);
+    setEvidenceActionError("");
+    try {
+      const response = await axiosClient.get(`/evidence/${file._id}/download`, {
+        params: { disposition: "inline" },
+        responseType: "blob",
+      });
+      const kind = getEvidencePreviewKind(file);
+      const preview = kind === "text"
+        ? { file, kind, text: await response.data.text() }
+        : { file, kind, url: URL.createObjectURL(response.data) };
+      setEvidencePreview(preview);
+    } catch {
+      setEvidenceActionError(`Unable to preview ${file.originalFilename || "this file"}. Please try again.`);
+    } finally {
+      setPreviewingFileId("");
+    }
+  };
+
+  const downloadEvidenceFile = async (file) => {
+    if (!file._id || downloadingFileId) return;
+
+    setDownloadingFileId(file._id);
+    setEvidenceActionError("");
+    try {
+      const response = await axiosClient.get(`/evidence/${file._id}/download`, { responseType: "blob" });
+      const downloadUrl = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = file.originalFilename || "evidence-file";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    } catch {
+      setEvidenceActionError(`Unable to download ${file.originalFilename || "this file"}. Please try again.`);
+    } finally {
+      setDownloadingFileId("");
+    }
+  };
+
+  const closeEvidencePreview = () => setEvidencePreview(null);
+
+  const verifyEvidenceFiles = async () => {
+    const files = incident?.evidenceFiles || [];
+    if (!files.length || isVerifyingEvidence) return;
+
+    setIsVerifyingEvidence(true);
+    setEvidenceActionError("");
+    setEvidenceVerification((current) => ({
+      ...current,
+      ...Object.fromEntries(files.filter((file) => file._id).map((file) => [file._id, "verifying"])),
+    }));
+
+    const results = await Promise.all(files.map(async (file) => {
+      if (!file._id) return [file._id, "error"];
+      try {
+        const response = await axiosClient.post(`/evidence/${file._id}/verify`);
+        const verificationStatus = response.data.verificationStatus || (response.data.match ? "verified" : "mismatch");
+        return [file._id, verificationStatus];
+      } catch {
+        return [file._id, "error"];
+      }
+    }));
+
+    const savedVerificationMap = Object.fromEntries(results);
+    setEvidenceVerification((current) => ({ ...current, ...savedVerificationMap }));
+    setIncident((currentIncident) => {
+      if (!currentIncident) return currentIncident;
+      return {
+        ...currentIncident,
+        evidenceFiles: (currentIncident.evidenceFiles || []).map((file) => {
+          const updatedStatus = savedVerificationMap[file._id];
+          if (!updatedStatus) return file;
+          return {
+            ...file,
+            verificationStatus: updatedStatus,
+            verifiedAt: new Date().toISOString(),
+          };
+        }),
+      };
+    });
+    setIsVerifyingEvidence(false);
+  };
 
   const addInternalNote = async () => {
     const trimmed = noteDraft.trim();
@@ -155,7 +301,6 @@ export default function AnalystCaseUpdate() {
 
                   <div className="case-status-stack">
                     <span className={`status-pill ${statusTone}`}>
-                      <span className="dot" />
                       {incident.status}
                     </span>
                   </div>
@@ -198,17 +343,78 @@ export default function AnalystCaseUpdate() {
                           Securely stored evidence files. Recalculate SHA-256 checksum on demand to verify integrity and ensure compliance with internal standards.
                         </p>
                       </div>
-                      <span className="attachment-badge">
-                        <Paperclip size={14} />
-                        Attached
-                      </span>
+                      <div className="evidence-top-actions">
+                        <span className="attachment-badge">
+                          <Paperclip size={14} />
+                          Attached
+                        </span>
+                        <button
+                          type="button"
+                          className="verify-evidence-button"
+                          onClick={verifyEvidenceFiles}
+                          disabled={!incident.evidenceFiles?.length || isVerifyingEvidence}
+                        >
+                          <ShieldCheck size={13} aria-hidden="true" />
+                          {isVerifyingEvidence ? "Verifying..." : "Verify Evidence Integrity"}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="secondary-text">Files: {incident.evidenceFiles?.length || 0}</div>
+                    {evidenceActionError && <p className="evidence-action-error" role="alert">{evidenceActionError}</p>}
 
-                    <div className="empty-file-box">
-                      {incident.evidenceFiles?.length ? "Evidence file summary will appear here." : "No Files Attached To This Case"}
-                    </div>
+                    {incident.evidenceFiles?.length ? (
+                      <div className="evidence-file-list" role="list" aria-label="Attached evidence files">
+                        {incident.evidenceFiles.map((file, index) => (
+                          <div className="evidence-file-item" role="listitem" key={file._id || file.originalFilename || index}>
+                            <span className="evidence-file-icon"><Paperclip size={16} aria-hidden="true" /></span>
+                            <span className="evidence-file-details">
+                              <strong title={file.originalFilename}>{file.originalFilename || "Evidence file"}</strong>
+                              <span>{formatFileSize(file.fileSize)} <span aria-hidden="true">·</span> {file.mimeType || "Unknown file type"}</span>
+                              {(() => {
+                                const verification = evidenceVerification[file._id] || "not-verified";
+                                const VerificationIcon = verification === "verified" ? CheckCircle2 : verification === "mismatch" || verification === "error" ? XCircle : null;
+                                const label = {
+                                  "not-verified": "Not Verified",
+                                  verifying: "Verifying...",
+                                  verified: "Verified",
+                                  mismatch: "Integrity Mismatch",
+                                  error: "Could Not Verify",
+                                }[verification];
+                                return (
+                                  <span className={`evidence-verification-status ${verification}`} role="status">
+                                    {VerificationIcon && <VerificationIcon size={13} aria-hidden="true" />}
+                                    {label}
+                                  </span>
+                                );
+                              })()}
+                            </span>
+                            <span className="evidence-file-actions">
+                              <button
+                                type="button"
+                                onClick={() => previewEvidenceFile(file)}
+                                disabled={getEvidencePreviewKind(file) === "unsupported" || Boolean(previewingFileId)}
+                                aria-label={`Preview ${file.originalFilename || "evidence file"}`}
+                                title={getEvidencePreviewKind(file) === "unsupported" ? "Preview not available for this file type" : "Preview file"}
+                              >
+                                <Eye size={16} aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => downloadEvidenceFile(file)}
+                                disabled={Boolean(downloadingFileId)}
+                                aria-label={`Download ${file.originalFilename || "evidence file"}`}
+                                title="Download file"
+                              >
+                                <Download size={16} aria-hidden="true" />
+                              </button>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="empty-file-box">No Files Attached To This Case</div>
+                    )}
 
                     <div className="chain-log">
                       <div className="chain-log-header">
@@ -237,9 +443,20 @@ export default function AnalystCaseUpdate() {
                       <h3>Investigation Status</h3>
                       <div className="status-line">
                         <span>Current State</span>
-                        <strong>{incident.status}</strong>
+                        <strong className={`status-value status-${statusTone}`}>{incident.status}</strong>
                       </div>
-                      <button type="button" className="inline-action">Update Case Status</button>
+                      <label className="status-select-label" htmlFor="case-status-select">Update Case Status</label>
+                      <select
+                        id="case-status-select"
+                        className="status-select"
+                        value={incident.status}
+                        onChange={(event) => updateCaseStatus(event.target.value)}
+                        disabled={isUpdatingStatus}
+                        aria-describedby={statusError ? "case-status-error" : undefined}
+                      >
+                        {INCIDENT_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                      </select>
+                      {statusError && <p className="status-update-error" id="case-status-error" role="alert">{statusError}</p>}
                     </div>
 
                     <div className="status-box notes-box">
@@ -280,6 +497,30 @@ export default function AnalystCaseUpdate() {
           )}
         </div>
       </main>
+
+      {evidencePreview && (
+        <div className="analyst-evidence-preview-backdrop" onClick={closeEvidencePreview}>
+          <section
+            className="analyst-evidence-preview"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Preview of ${evidencePreview.file.originalFilename || "evidence file"}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="analyst-evidence-preview-header">
+              <strong title={evidencePreview.file.originalFilename}>{evidencePreview.file.originalFilename || "Evidence preview"}</strong>
+              <button type="button" onClick={closeEvidencePreview} aria-label="Close preview" title="Close preview">
+                <X size={18} aria-hidden="true" />
+              </button>
+            </header>
+            <div className="analyst-evidence-preview-content">
+              {evidencePreview.kind === "image" && <img src={evidencePreview.url} alt={evidencePreview.file.originalFilename || "Evidence file preview"} />}
+              {evidencePreview.kind === "pdf" && <iframe src={evidencePreview.url} title={`Preview of ${evidencePreview.file.originalFilename}`} />}
+              {evidencePreview.kind === "text" && <pre>{evidencePreview.text}</pre>}
+            </div>
+          </section>
+        </div>
+      )}
     </>
   );
 }

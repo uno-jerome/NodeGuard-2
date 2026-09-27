@@ -1,5 +1,7 @@
 import "../design/AnalystHeader.css";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ChevronDown, LogIn, LogOut } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import logoIcon from "../../public/Nodeguard Icon.png";
 import LogoName from "../../public/Nodeguard Logo.png";
 import iconDashboard from "../../public/layout-dashboard.png";
@@ -11,12 +13,15 @@ const NAVIGATION_ITEMS = [
   { label: "Dashboard", path: "/analyst", icon: iconDashboard },
   ];
 
-export default function AnalystHeader({
-  items = NAVIGATION_ITEMS,
-    user = {  name: "Shasha Guzman", email: "Shasha.Guzman@nodeguard.local", avatar },
-    }) {
+export default function AnalystHeader({ items = NAVIGATION_ITEMS }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <header className="analyst-header">
@@ -38,13 +43,29 @@ export default function AnalystHeader({
         ))}
       </nav>
 
-    <section className="user-info">
-        <img src={user.avatar} alt="" className="user-avatar" />
-        <div className="user-details">
-          <span className="user-name">{user.name}</span>
-          <span className="user-email">{user.email}</span>
-        </div>
-      </section>
+      {isAuthenticated ? (
+        <details className="analyst-profile-menu">
+          <summary className="user-info" aria-label="Open profile menu">
+            <img src={user.avatar || avatar} alt="" className="user-avatar" />
+            <div className="user-details">
+              <span className="user-name">{user.name}</span>
+              <span className="user-email">{user.email}</span>
+            </div>
+            <ChevronDown size={15} aria-hidden="true" />
+          </summary>
+          <div className="analyst-profile-dropdown">
+            <button type="button" onClick={handleLogout}>
+              <LogOut size={16} aria-hidden="true" />
+              Log Out
+            </button>
+          </div>
+        </details>
+      ) : (
+        <button className="user-info user-info-login" type="button" onClick={() => navigate("/login")}>
+          <LogIn size={17} aria-hidden="true" />
+          <span className="user-name">Log In</span>
+        </button>
+      )}
       
     </header>
   );
