@@ -4,6 +4,7 @@ import "../../Components/design/Admin/AuditLog.css";
 import searchIcon from "../../public/search_icon.svg";
 import { AuditLogInspectorModal } from "../../Components/Elements/auditInspect";
 import { DEFAULT_ENTRIES } from "../../constants/auditLogDefaults";
+import Calendar from "../../Components/calendar/calendar";
 
 export const Ledger_Header = {
     title: 'Global Custody Ledger',
@@ -11,6 +12,12 @@ export const Ledger_Header = {
 
 const EMPTY_FILTERS = { action: '', incidentId: '', startDate: '', endDate: '' };
 
+const formatDateMMDDYYYY = (isodate) => {
+    if (!isodate) return null;
+    const [year, month, day] = isodate.split('-');
+    if (!year || !month || !day) return isodate;
+    return `${month}/${day}/${year.slice(-2)}`;
+};
 
 
 const ACTION_BADGES = {
@@ -79,6 +86,7 @@ export default function AuditLog({
     const [filters, setFilters] = useState(EMPTY_FILTERS);
     const [showFilters, setShowFilters] = useState(false);
     const [inspectedEntry, setInspectedEntry] = useState(null);
+    const [openDatePicker, setOpenDatePicker] = useState(null);
     const panelRef = useRef(null);
 
     const submitSearch = (value) => {
@@ -219,16 +227,30 @@ export default function AuditLog({
                                 <div className="audit-log-filter-field">
                                     <label htmlFor="filter3">Date Range:</label>
                                     <div className="audit-filter-dates">
-                                        <input
-                                            type="date"
-                                            value={filters.startDate}
-                                            onChange={(event) => applyFilters({ ...filters, startDate: event.target.value })}
-                                        />
-                                        <input
-                                            type="date"
-                                            value={filters.endDate}
-                                            onChange={(event) => applyFilters({ ...filters, endDate: event.target.value })}
-                                        />
+                                        {['startDate', 'endDate'].map((dateField) => (
+                                            <div className="audit-filter-date-control" key={dateField}>
+                                                <button
+                                                    type="button"
+                                                    className="audit-filter-date-button"
+                                                    onClick={() => setOpenDatePicker((openField) => openField === dateField ? null : dateField)}
+                                                    aria-label={`Choose ${dateField === 'startDate' ? 'start' : 'end'} date`}
+                                                    aria-expanded={openDatePicker === dateField}
+                                                >
+                                                    {formatDateMMDDYYYY(filters[dateField]) || 'mm/dd/yy'}
+                                                </button>
+                                                {openDatePicker === dateField && (
+                                                    <div className="audit-filter-calendar-popup">
+                                                        <Calendar
+                                                            value={filters[dateField]}
+                                                            onChange={(dateValue) => {
+                                                                applyFilters({ ...filters, [dateField]: dateValue });
+                                                                setOpenDatePicker(null);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
