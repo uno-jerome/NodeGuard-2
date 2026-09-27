@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
 import "../../Components/design/AnalystDashboard.css";
 
-export default function AnalystDashboard() {
+export default function AnalystDashboard({ showHeader = true }) {
 	const navigate = useNavigate();
 	const [incidents, setIncidents] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +55,7 @@ export default function AnalystDashboard() {
 
 	return (
 		<>
-			<AnalystHeader />
+			{showHeader && <AnalystHeader />}
 			<main className="analyst-dashboard">
 				<div className="dashboard-heading">
 					<div>

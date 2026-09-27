@@ -7,8 +7,8 @@ import TrackReport from "./pages/Client/TrackReport";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminCaseUpdate from "./pages/Admin/AdminCaseUpdate";
 import AuditLog from "./pages/Admin/AuditLog";
+import AuditInspectorPreview from "./pages/Admin/AuditInspectorPreview";
 import UserManament from "./pages/Admin/UserManament";
-import ProvisionStaff from "./Components/ProvisionStaff";
 import AnalystDashboard from "./pages/Analyst/AnalystDashboard";
 import AnalystCaseUpdate from "./pages/Analyst/AnalystCaseUpdate";
 
@@ -67,6 +67,13 @@ export default function App() {
             </div>
           }
         />
+        <Route path="/admin/audit-inspector-preview"
+          element={
+            <div data-portal="admin" className="portal-container">
+              <AuditInspectorPreview />
+            </div>
+          }
+        />
         <Route path="/admin/users"
           element={
             <div data-portal="admin" className="portal-container">
@@ -77,7 +84,7 @@ export default function App() {
         <Route path="/admin/users/provision"
           element={
             <div data-portal="admin" className="portal-container">
-              <ProvisionStaff />
+              <UserManament />
             </div>
           }
         />

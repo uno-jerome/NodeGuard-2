@@ -1,11 +1,11 @@
 import "../../Components/design/client/Home.css";
 import ClientHeader from "../../Components/navbar/ClientHeader";
-import incidentReportImage from "../../public/report logo.png";
-import trackReportImage from "../../public/Tracklogo.png";
-import warning1 from "../../public/warning info 1.png";
-import warning2 from "../../public/warning info 2.png";
-import warning3 from "../../public/warninginfo3.png";
-import warning from "../../public/warning icon.png";
+import incidentReportImage from "../../public/Incidentlogo.svg";
+import trackReportImage from "../../public/Tracklogo.svg";
+import warning1 from "../../public/warning info 1.svg";
+import warning2 from "../../public/warning info 2.svg";
+import warning3 from "../../public/warning info 3.svg";
+import warning from "../../public/warning icon.svg";
 import CHEVRON_ICON_URL from "../../public/chev.png";
 import QUESTION_ICON_URL from "../../public/question.png";
 
@@ -43,7 +43,7 @@ export default function ClientHome() {
             <div className="home-header">
                 <h1>Report Cyber Incidents & Secure Digital Evidence</h1>
                 <p className="phead">An official platform for citizens to file cybercrime incidents, generate cryptographic evidence baselines, and receive verified investigation tracking.</p>
-            </div>p
+            </div>
 
         <section className="client-action-section">
             <div className="File-appeal-container">
@@ -74,7 +74,7 @@ export default function ClientHome() {
     <div className="client-warning-grid">
       <div className="client-warning-info">
         <div className="client-warning-info-title">
-          <img src={warning1} alt="" className="client-warning-info-image" />
+          <img src={warning1} alt="" className="client-warning-info-image client-warning-info-image--large" />
           <h3>Preserve Unaltered Screenshots</h3>
         </div>
         <p>Do not crop, edit, mark, or blur screenshots. Ensure status bars, dates, timestamps, usernames, and profile URLs are fully visible.</p>

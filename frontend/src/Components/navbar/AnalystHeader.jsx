@@ -7,7 +7,7 @@ import iconCaseUpdate from "../../public/layout-custody.png";
 const avatar = "https://www.figma.com/api/mcp/asset/25ddeda4-f3be-4366-9a45-39db2f40bf21.png";
 
 const NAVIGATION_ITEMS = [
-  { label: "Home", path: "/analyst/case-update", icon: iconCaseUpdate },
+  { label: "Case", path: "/analyst/case-update", icon: iconCaseUpdate },
   { label: "Dashboard", path: "/analyst", icon: iconDashboard },
   ];
 

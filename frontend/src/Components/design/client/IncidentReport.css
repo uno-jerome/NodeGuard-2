@@ -1,6 +1,13 @@
 .incident-report-page {
+  background:
+        radial-gradient(
+            1000px 650px at 50% 250px,
+            #2d4470 0%,
+            #151b2e 60%,
+            rgba(18, 18, 18, 0) 100%  
+        ) no-repeat,
+        var(--portal-bg);
   min-height: 100vh;
-  background: linear-gradient(180deg, #121212 0%, #121212 62%, #1d2b3d 75%, #2a4361 100%);
   color: #f3f8ff;
 }
 
