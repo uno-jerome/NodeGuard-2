@@ -9,7 +9,7 @@
         var(--portal-bg);
   min-height: 100vh;
   color: #f3f8ff;
-  padding: 5px 10px;
+  padding: 10px 20px 10px;
 }
 
 .incident-report-shell {

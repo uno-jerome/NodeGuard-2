@@ -29,8 +29,9 @@
 .dashboard-heading h1 
 { 
     margin: 0; 
-    font-size: clamp(25px, 3vw, 40px); 
+    font-size: clamp(25px, 3vw, 30px); 
     line-height: 1.15; 
+    font-weight: 600;
 }
 .refresh-button 
 { 
@@ -39,7 +40,7 @@
     gap: 8px; 
     border: 1px solid #3c4c6d; 
     border-radius: 7px; 
-    padding: 10px 14px; 
+    padding: 5px 10px; 
     background: #111a31; 
     color: #dbe7ff; 
     cursor: pointer; 
