@@ -19,6 +19,10 @@
     overflow: hidden;
 }
 
+.webkitscrollbar {
+    display: none;
+}
+
 .phead {
     max-width: 964px;
     font-size: 15px;

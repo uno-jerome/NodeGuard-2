@@ -273,7 +273,7 @@ export default function AuditLog({
                                                 <th className="audit-inspect">Inspect</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody className="audit-log-table-body">
                                             {filteredEntries.map((entry) => (
                                                 <tr key={entry.id} className={entry.action === 'VERIFY_FAIL' ? 'tamper-detected' : ''}>
                                                     <td><ActionBadge action={entry.action} /></td>

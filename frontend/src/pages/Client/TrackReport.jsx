@@ -67,9 +67,8 @@ export default function TrackReport() {
     const caseNotes = Array.isArray(incident?.notes) ? [...incident.notes].reverse() : [];
 
     return (
-        <>
-            <ClientHeader />
             <main className="track-report-page">
+                <ClientHeader />
                 <section className="track-report-shell" aria-label="Track a case">
                     <form className="track-report-form" onSubmit={handleSubmit}>
                         <label htmlFor="tracking-id">Enter Tracking ID</label>
@@ -129,6 +128,5 @@ export default function TrackReport() {
                     )}
                 </section>
             </main>
-        </>
     );
 }

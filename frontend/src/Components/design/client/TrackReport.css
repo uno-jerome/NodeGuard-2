@@ -1,3 +1,5 @@
+
+
 .track-report-page {
   --track-reported: #3b82f6;
   --track-reported-bg: rgb(34 37 81 / 50%);
@@ -8,12 +10,13 @@
   --track-investigation-bg: rgb(90 9 30 / 50%);
   --track-resolved: #26b719;
   --track-resolved-bg: rgb(19 95 12 / 50%);
-  min-height: calc(100vh - 76px);
+  min-height: 100vh;
   padding: 54px 20px 88px;
   color: #edf3ff;
   background:
     radial-gradient(ellipse at 50% 24%, rgba(54, 91, 151, 0.58), transparent 57%),
     linear-gradient(180deg, #151a22 0%, #10141b 58%, #1b2b42 100%);
+  padding-top:10px;
 }
 
 .track-report-shell {
