@@ -144,4 +144,33 @@ export const exportDossier = async (req, res) => {
   }
 };
 
-export default { createPublicIncident, getIncidentByTrackingId, getIncidents, getIncidentById, updateStatus, addNote, exportDossier };
+export const getAuditLog = async (req, res) => {
+  const logs = await ChainOfCustodyLog.find()
+    .populate('performedBy', 'name role')
+    .populate('incidentId', 'trackingId title')
+    .sort({ timestamp: -1 })
+    .lean();
+
+  const entries = logs.map((log) => ({
+    id: log._id,
+    action: log.action,
+    actor: log.performedBy?.name ?? 'PUBLIC_ANONYMOUS',
+    role: log.performedBy?.role === 'ADMIN' ? 'Admin' : log.performedBy?.role === 'INVESTIGATOR' ? 'Investigator' : 'Client',
+    ip: log.ipAddress ?? '—',
+    details: log.details,
+    timestamp: log.timestamp,
+    incidentId: log.incidentId?.trackingId ?? null,
+    incidentTitle: log.incidentId?.title ?? null,
+    calculatedHash: log.calculatedHash ?? null,
+  }));
+
+  const incidentOptions = [...new Map(
+    logs
+      .filter((l) => l.incidentId)
+      .map((l) => [String(l.incidentId._id), { id: l.incidentId.trackingId, name: l.incidentId.trackingId }])
+  ).values()];
+
+  return res.status(200).json({ success: true, entries, incidentOptions });
+};
+
+export default { createPublicIncident, getIncidentByTrackingId, getIncidents, getIncidentById, updateStatus, addNote, exportDossier, getAuditLog };

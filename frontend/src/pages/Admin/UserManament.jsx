@@ -1,14 +1,10 @@
 import { UserRound } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AdminHeader from "../../Components/navbar/AdminHeader";
 import { ProvisionStaffModal } from "../../Components/Elements/AddNewStaff";
 import { SessionProvisioningLog } from "../../Components/Elements/SessionProvisonLog";
 import "../../Components/design/Admin/UserManagement.css";
-
-const initialProvisioningEntries = [
-	{ id: "preview-1", name: "Amina Rahman", email: "amina@nodeguard.local", role: "Investigator", time: "09:42" },
-	{ id: "preview-2", name: "David Chen", email: "david@nodeguard.local", role: "Analyst", time: "09:18" },
-];
+import axiosClient from "../../api/axiosClient";
 
 const FORENSIC_CLEARANCE_BADGES = [
 	{ id: "role", label: "Roles: Investigator", variant: "blue" },
@@ -31,15 +27,37 @@ const PROVISION_NOTE = {
 
 export default function UserManament() {
 	const [isProvisionModalOpen, setProvisionModalOpen] = useState(false);
-	const [entries, setEntries] = useState(initialProvisioningEntries);
+	const [entries, setEntries] = useState([]);
+	const [provisionError, setProvisionError] = useState("");
 
-	const handleStaffSave = (staff) => {
-		const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
-		setEntries((current) => [
-			{ id: crypto.randomUUID(), ...staff, time },
-			...current,
-		]);
-		setProvisionModalOpen(false);
+	useEffect(() => {
+		axiosClient.get("/auth/users").then((res) => {
+			const users = res.data.users || [];
+			setEntries(users.map((u) => ({
+				id: u.id || u._id,
+				name: u.name,
+				email: u.email,
+				role: u.role === "ADMIN" ? "Admin" : "Investigator",
+				time: new Date(u.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }),
+			})));
+		}).catch(() => {});
+	}, []);
+
+	const handleStaffSave = async (staff) => {
+		setProvisionError("");
+		try {
+			const res = await axiosClient.post("/auth/register", {
+				name: staff.name,
+				email: staff.email,
+				password: staff.password,
+			});
+			const u = res.data.user;
+			const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+			setEntries((current) => [{ id: u.id || u._id, name: u.name, email: u.email, role: "Investigator", time }, ...current]);
+			setProvisionModalOpen(false);
+		} catch (err) {
+			setProvisionError(err.response?.data?.message || "Failed to provision staff account.");
+		}
 	};
 
 	return (
@@ -105,7 +123,8 @@ export default function UserManament() {
 				<ProvisionStaffModal
 					isOpen={isProvisionModalOpen}
 					onSave={handleStaffSave}
-					onClose={() => setProvisionModalOpen(false)}
+					serverError={provisionError}
+					onClose={() => { setProvisionModalOpen(false); setProvisionError(""); }}
 				/>
 			</div>
 		</>
