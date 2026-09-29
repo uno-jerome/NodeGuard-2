@@ -13,11 +13,11 @@ import UserManament from "./pages/Admin/UserManament";
 import AnalystDashboard from "./pages/Analyst/AnalystDashboard";
 import AnalystCaseUpdate from "./pages/Analyst/AnalystCaseUpdate";
 
-function RequireRole({ role }) {
+function RequireRole({ roles }) {
   const { isAuthenticated, user } = useAuth();
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (user.role !== role) {
+  if (!roles.includes(user.role)) {
     const homePath = user.role === "ADMIN"
       ? "/admin"
       : user.role === "INVESTIGATOR"
@@ -63,7 +63,7 @@ export default function App() {
           }
         />
 
-        <Route element={<RequireRole role="ADMIN" />}>
+        <Route element={<RequireRole roles={["ADMIN"]} />}>
           <Route path="/admin"
             element={
               <div data-portal="admin" className="portal-container">
@@ -108,7 +108,7 @@ export default function App() {
           />
         </Route>
 
-        <Route element={<RequireRole role="INVESTIGATOR" />}>
+        <Route element={<RequireRole roles={["ADMIN", "INVESTIGATOR"]} />}>
           <Route path="/analyst"
             element={
               <div data-portal="analyst" className="portal-container">

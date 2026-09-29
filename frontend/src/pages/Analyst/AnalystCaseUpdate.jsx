@@ -40,7 +40,7 @@ const getEvidencePreviewKind = (file) => {
   return "unsupported";
 };
 
-export default function AnalystCaseUpdate() {
+export default function AnalystCaseUpdate({ showHeader = true }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [caseId, setCaseId] = useState(searchParams.get("trackingId") || "");
   const [incident, setIncident] = useState(null);
@@ -283,7 +283,7 @@ export default function AnalystCaseUpdate() {
 
   return (
     <>
-      <AnalystHeader />
+      {showHeader && <AnalystHeader />}
 
       <main className="analyst-case-update">
         <div className="case-update-shell">

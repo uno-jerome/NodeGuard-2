@@ -103,7 +103,7 @@ export default function AnalystDashboard({ showHeader = true }) {
 						<table>
 														<thead><tr><th>Tracking ID</th><th>Incident title</th><th>Category</th><th>Priority</th><th>Status</th><th>Complainant</th><th>Reported date</th><th>Action</th></tr></thead>
 							<tbody>
-														{displayedIncidents.map((incident) => <tr key={incident._id}>
+														{displayedIncidents.map((incident) => <tr key={incident._id} style={{ cursor: "pointer" }} onClick={() => navigate(`/analyst/case-update?trackingId=${encodeURIComponent(incident.trackingId)}`)}>
 									<td className="tracking-id">{incident.trackingId}</td>
 									<td>{incident.title}</td><td><span className="category-badge">{incident.category}</span></td>
 									<td><span className={`badge priority-${String(incident.priority).toLowerCase()}`}>{incident.priority}</span></td>

@@ -1,10 +1,11 @@
-import AnalystHeader from "../../Components/navbar/AnalystHeader";
+import AdminHeader from "../../Components/navbar/AdminHeader";
+import AnalystCaseUpdate from "../Analyst/AnalystCaseUpdate";
 
 export default function AdminCaseUpdate() {
 	return (
 		<>
-			<AnalystHeader />
-			<main><h1>Admin Case Update</h1></main>
+			<AdminHeader />
+			<AnalystCaseUpdate showHeader={false} />
 		</>
 	);
 }

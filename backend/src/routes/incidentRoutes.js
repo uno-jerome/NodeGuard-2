@@ -7,6 +7,7 @@ import {
   updateStatus,
   addNote,
   exportDossier,
+  getAuditLog,
 } from '../controllers/incidentController.js';
 import { verifyToken } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/uploadMiddleware.js';
@@ -16,6 +17,7 @@ const router = express.Router();
 router.post('/', upload.array('files'), createPublicIncident);
 router.get('/track/:trackingId', getIncidentByTrackingId);
 router.get('/', verifyToken, getIncidents);
+router.get('/audit', verifyToken, getAuditLog);
 router.get('/:id', verifyToken, getIncidentById);
 router.patch('/:id/status', verifyToken, updateStatus);
 router.post('/:id/notes', verifyToken, addNote);

@@ -1,10 +1,11 @@
-﻿import AdminHeader from "../../Components/navbar/AdminHeader";
+import AdminHeader from "../../Components/navbar/AdminHeader";
 import { useEffect, useMemo, useRef, useState } from 'react';
 import "../../Components/design/Admin/AuditLog.css";
 import searchIcon from "../../public/search_icon.svg";
 import { AuditLogInspectorModal } from "../../Components/Elements/auditInspect";
 import { DEFAULT_ENTRIES } from "../../constants/auditLogDefaults";
 import Calendar from "../../Components/calendar/calendar";
+import axiosClient from "../../api/axiosClient";
 
 export const Ledger_Header = {
     title: 'Global Custody Ledger',
@@ -87,7 +88,21 @@ export default function AuditLog({
     const [showFilters, setShowFilters] = useState(false);
     const [inspectedEntry, setInspectedEntry] = useState(null);
     const [openDatePicker, setOpenDatePicker] = useState(null);
+    const [liveEntries, setLiveEntries] = useState(null);
+    const [liveIncidentOptions, setLiveIncidentOptions] = useState(null);
     const panelRef = useRef(null);
+
+    useEffect(() => {
+        axiosClient.get('/incidents/audit')
+            .then(({ data }) => {
+                setLiveEntries(data.entries);
+                setLiveIncidentOptions(data.incidentOptions);
+            })
+            .catch(() => {});
+    }, []);
+
+    const resolvedEntries = liveEntries ?? entries;
+    const resolvedIncidentOptions = liveIncidentOptions ?? incidentOptions;
 
     const submitSearch = (value) => {
         setQuery(value);
@@ -128,7 +143,7 @@ export default function AuditLog({
     const filteredEntries = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase();
 
-        return entries.filter((entry) => {
+        return resolvedEntries.filter((entry) => {
             const matchesQuery =
                 !normalizedQuery ||
                 [entry.actor, entry.role, entry.ip, entry.details, entry.action, entry.incidentId]
@@ -146,7 +161,7 @@ export default function AuditLog({
 
             return matchesQuery && matchesAction && matchesIncident && matchesStartDate && matchesEndDate;
         });
-    }, [entries, filters, query]);
+    }, [resolvedEntries, filters, query]);
 
     const activeCount = Object.values(filters).filter(Boolean).length;
     const displayShowing = showing ?? filteredEntries.length;
@@ -218,7 +233,7 @@ export default function AuditLog({
                                     <label htmlFor="filter2">Target Incident Case</label>
                                     <select id="filter2" value={filters.incidentId} onChange={(event) => applyFilters({ ...filters, incidentId: event.target.value })}>
                                         <option value="">All Incidents</option>
-                                        {incidentOptions.map((incident) => (
+                                        {resolvedIncidentOptions.map((incident) => (
                                             <option key={incident.id} value={incident.id}>{incident.name}</option>
                                         ))}
                                     </select>
