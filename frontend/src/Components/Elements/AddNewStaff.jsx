@@ -14,7 +14,7 @@ export const PROVISION_STAFF_FIELDS = [
 
 const DEFAULT_ROLE = 'Investigator';
 
-export function ProvisionStaffModal({ isOpen, onSave, onClose }) {
+export function ProvisionStaffModal({ isOpen, onSave, onClose, serverError }) {
 	const [values, setValues] = useState(() =>
 		Object.fromEntries(PROVISION_STAFF_FIELDS.map((f) => [f.name, '']))
 	);
@@ -69,6 +69,7 @@ export function ProvisionStaffModal({ isOpen, onSave, onClose }) {
 						</div>
 					))}
 					<div className="psm-footer">
+						{serverError && <p role="alert" style={{ color: "var(--color-error, #f87171)", marginBottom: 8, fontSize: "0.85rem" }}>{serverError}</p>}
 						<button type="submit" className="psm-save" disabled={!isValid}>Add New Staff</button>
 					</div>
 				</form>
