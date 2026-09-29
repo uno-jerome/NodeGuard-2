@@ -9,18 +9,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-const BLOCKED_EXTENSIONS = new Set([
-  '.exe',
-  '.bat',
-  '.sh',
-  '.cmd',
-  '.msi',
-  '.dll',
-  '.com',
-  '.vbs',
-  '.scr',
-  '.ps1',
-]);
+const ALLOWED_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.pdf', '.docx', '.pcap', '.eml']);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -34,11 +23,8 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
-  if (BLOCKED_EXTENSIONS.has(ext)) {
-    return cb(
-      new Error(`Executable and script files (${ext}) are strictly prohibited as evidence uploads.`),
-      false
-    );
+  if (!ALLOWED_EXTENSIONS.has(ext)) {
+    return cb(new Error(`File type not permitted. Allowed types: ${[...ALLOWED_EXTENSIONS].join(', ')}`), false);
   }
   cb(null, true);
 };
@@ -48,6 +34,7 @@ export const upload = multer({
   fileFilter,
   limits: {
     fileSize: 50 * 1024 * 1024, // 50 MB
+    files: 10,
   },
 });
 
