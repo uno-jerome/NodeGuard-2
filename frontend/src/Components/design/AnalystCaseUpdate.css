@@ -792,6 +792,11 @@
   margin: 0;
 }
 
+.notes-export-button {
+  align-self: flex-start;
+  gap: 8px;
+}
+
 .notes-box .note-input {
   width: 100%;
   min-height: 88px;

@@ -124,6 +124,9 @@ export const exportDossier = async (req, res) => {
       .populate('assignedTo', 'name email role')
       .populate('evidenceFiles');
     if (!incident) return res.status(404).json({ success: false, message: 'Incident not found.' });
+    if (!['Resolved', 'Closed'].includes(incident.status)) {
+      return res.status(409).json({ success: false, message: 'The case must be resolved or closed before its report can be exported.' });
+    }
 
     const logs = await ChainOfCustodyLog.find({ incidentId: incident._id })
       .populate('performedBy', 'name email role')

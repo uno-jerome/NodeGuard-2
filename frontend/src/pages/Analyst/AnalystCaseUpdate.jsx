@@ -52,6 +52,8 @@ export default function AnalystCaseUpdate() {
   const [localNotes, setLocalNotes] = useState([]);
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [noteError, setNoteError] = useState("");
+  const [isExportingReport, setIsExportingReport] = useState(false);
+  const [reportExportError, setReportExportError] = useState("");
   const [evidencePreview, setEvidencePreview] = useState(null);
   const [isVerifyingEvidence, setIsVerifyingEvidence] = useState(false);
   const [evidenceVerification, setEvidenceVerification] = useState({});
@@ -250,6 +252,32 @@ export default function AnalystCaseUpdate() {
       setNoteError(requestError.response?.data?.message || "Unable to save this note. Please try again.");
     } finally {
       setIsSavingNote(false);
+    }
+  };
+
+  const exportIncidentReport = async () => {
+    if (!incident?._id || isExportingReport) return;
+    if (!["Resolved", "Closed"].includes(incident.status)) {
+      setReportExportError("PDF export is available only when the case is resolved or closed.");
+      return;
+    }
+
+    setIsExportingReport(true);
+    setReportExportError("");
+    try {
+      const response = await axiosClient.get(`/incidents/${incident._id}/dossier`, { responseType: "blob" });
+      const downloadUrl = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `Dossier-${incident.trackingId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    } catch {
+      setReportExportError("Unable to export this report. Please try again.");
+    } finally {
+      setIsExportingReport(false);
     }
   };
 
@@ -489,6 +517,17 @@ export default function AnalystCaseUpdate() {
                           </article>
                         ))}
                       </div>
+                      {reportExportError && <p className="note-save-error" role="alert">{reportExportError}</p>}
+                      <button
+                        type="button"
+                        className="inline-action notes-export-button"
+                        onClick={exportIncidentReport}
+                        disabled={isExportingReport}
+                        title={["Resolved", "Closed"].includes(incident.status) ? "Export the case report as PDF" : "Resolve or close the case to enable PDF export"}
+                      >
+                        <Download size={15} aria-hidden="true" />
+                        {isExportingReport ? "Exporting PDF..." : "Export PDF Report"}
+                      </button>
                     </div>
                   </aside>
                 </div>
