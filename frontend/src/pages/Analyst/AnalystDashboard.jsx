@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
 import "../../Components/design/Analyst/AnalystDashboard.css";
 
-export default function AnalystDashboard({ showHeader = true }) {
+export default function AnalystDashboard({ showHeader = true, showInspect = true }) {
 	const navigate = useNavigate();
 	const [incidents, setIncidents] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -101,7 +101,7 @@ export default function AnalystDashboard({ showHeader = true }) {
 								<section className="case-list-panel" aria-label="Submitted cases">
 					<div className="table-wrap">
 						<table>
-														<thead><tr><th>Tracking ID</th><th>Incident title</th><th>Category</th><th>Priority</th><th>Status</th><th>Complainant</th><th>Reported date</th><th>Action</th></tr></thead>
+														<thead><tr><th>Tracking ID</th><th>Incident title</th><th>Category</th><th>Priority</th><th>Status</th><th>Complainant</th><th>Reported date</th>{showInspect && <th>Action</th>}</tr></thead>
 							<tbody>
 														{displayedIncidents.map((incident) => <tr key={incident._id}>
 									<td className="tracking-id">{incident.trackingId}</td>
@@ -109,7 +109,7 @@ export default function AnalystDashboard({ showHeader = true }) {
 									<td><span className={`badge priority-${String(incident.priority).toLowerCase()}`}>{incident.priority}</span></td>
 									<td><span className={`badge status-${String(incident.status).toLowerCase().replaceAll(" ", "-")}`}>{incident.status}</span></td>
 									<td>{incident.complainantName || "Anonymous"}</td><td>{formatDate(incident.incidentDate)}</td>
-					<td><button type="button" className="view-case-button" onClick={() => navigate(`/analyst/case-update?trackingId=${encodeURIComponent(incident.trackingId)}`)}><Eye size={15} aria-hidden="true" />Inspect</button></td>
+					{showInspect && <td><button type="button" className="view-case-button" onClick={() => navigate(`/analyst/case-update?trackingId=${encodeURIComponent(incident.trackingId)}`)}><Eye size={15} aria-hidden="true" />Inspect</button></td>}
 								</tr>)}
 							</tbody>
 						</table>

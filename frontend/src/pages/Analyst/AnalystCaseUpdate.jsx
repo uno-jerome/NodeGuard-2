@@ -1,5 +1,5 @@
 import AnalystHeader from "../../Components/navbar/AnalystHeader";
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Download, Eye, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, Eye, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
@@ -15,6 +15,13 @@ const formatDisplayDate = (dateValue) => {
   const date = new Date(dateValue);
   if (Number.isNaN(date.getTime())) return dateValue;
   return date.toLocaleDateString("en-CA");
+};
+
+const formatLogTimestamp = (timestamp) => {
+  if (!timestamp) return "-";
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
 };
 
 const formatDisplayTime = (dateValue) => {

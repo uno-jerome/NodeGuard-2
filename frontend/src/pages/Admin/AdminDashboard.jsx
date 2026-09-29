@@ -6,7 +6,7 @@ export default function AdminCaseUpdate() {
 	return (
 		<>
 			<AdminHeader />
-			<AnalystDashboard showHeader={false} />
+			<AnalystDashboard showHeader={false} showInspect={false} />
 		</>
 	);
 }
