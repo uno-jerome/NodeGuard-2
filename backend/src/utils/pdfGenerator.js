@@ -69,6 +69,19 @@ export const generateDossierPDF = (incident, logs = [], res) => {
     });
   }
 
+  renderSectionHeader('6. INTERNAL INVESTIGATION NOTES');
+  const notes = incident.notes || [];
+  if (notes.length === 0) {
+    doc.text('No internal investigation notes recorded.');
+  } else {
+    notes.forEach((note) => {
+      const date = note.date ? new Date(note.date).toISOString() : 'Date unavailable';
+      doc.font('Helvetica-Bold').text(`[${date}] ${note.author || 'Staff'}`);
+      doc.font('Helvetica').text(note.text || '');
+      doc.moveDown(0.3);
+    });
+  }
+
   doc.end();
 };
 

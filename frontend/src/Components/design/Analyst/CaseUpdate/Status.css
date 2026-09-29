@@ -1,0 +1,126 @@
+.status-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-width: 0;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-pill.review,
+.status-pill.under-review {
+  background: rgba(92, 70, 10, 0.5);
+  border-color: #E9B21B;
+  color: #E9B21B;
+}
+
+.status-pill.investigating {
+  background: rgba(90, 9, 30, 0.5);
+  border-color: #F04875;
+  color: #F04875;
+}
+
+.status-pill.resolved,
+.status-pill.closed {
+  background: rgba(19, 94, 12, 0.5);
+  border-color: #26B719;
+  color: #26B719;
+}
+
+.status-pill.reported {
+  background: rgba(34, 37, 81, 0.5);
+  border-color: #3B82F6;
+  color: #3B82F6;
+}
+
+.status-box {
+  border: 1px solid rgba(146, 169, 216, 0.2);
+  border-radius: 12px;
+  background: rgba(10, 17, 27, 0.9);
+  padding: 16px 18px;
+}
+
+.status-box h3 {
+  margin: 0 0 10px;
+  color: #edf5ff;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-box .status-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #dfe8f8;
+}
+
+.status-box .status-line strong.status-value {
+  background-color: transparent;
+  color: #3B82F6;
+}
+
+.status-box .status-line strong.status-investigating {
+  color: #F04875;
+}
+
+.status-box .status-line strong.status-under-review {
+  color: #E9B21B;
+}
+
+.status-box .status-line strong.status-resolved,
+.status-box .status-line strong.status-closed {
+  color: #26B719;
+}
+
+.status-select-label {
+  display: block;
+  margin: 0 0 7px;
+  color: #9db3d5;
+  font-size: 12px;
+}
+
+.status-select {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid rgba(123, 146, 201, 0.4);
+  border-radius: 8px;
+  background: rgba(7, 13, 24, 0.95);
+  color: #edf3ff;
+  padding: 9px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.status-select:focus-visible {
+  outline: 2px solid rgba(125, 174, 255, 0.8);
+  outline-offset: 2px;
+}
+
+.status-select:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.status-update-error {
+  margin: 8px 0 0;
+  color: #ffb1c3;
+  font-size: 12px;
+}

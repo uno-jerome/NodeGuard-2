@@ -3,7 +3,7 @@ import { AlertTriangle, ClipboardList, Eye, RefreshCw, Search, ShieldCheck } fro
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
-import "../../Components/design/AnalystDashboard.css";
+import "../../Components/design/Analyst/AnalystDashboard.css";
 
 export default function AnalystDashboard({ showHeader = true }) {
 	const navigate = useNavigate();
@@ -103,12 +103,13 @@ export default function AnalystDashboard({ showHeader = true }) {
 						<table>
 														<thead><tr><th>Tracking ID</th><th>Incident title</th><th>Category</th><th>Priority</th><th>Status</th><th>Complainant</th><th>Reported date</th><th>Action</th></tr></thead>
 							<tbody>
-														{displayedIncidents.map((incident) => <tr key={incident._id} style={{ cursor: "pointer" }} onClick={() => navigate(`/analyst/case-update?trackingId=${encodeURIComponent(incident.trackingId)}`)}>
+														{displayedIncidents.map((incident) => <tr key={incident._id}>
 									<td className="tracking-id">{incident.trackingId}</td>
 									<td>{incident.title}</td><td><span className="category-badge">{incident.category}</span></td>
 									<td><span className={`badge priority-${String(incident.priority).toLowerCase()}`}>{incident.priority}</span></td>
 									<td><span className={`badge status-${String(incident.status).toLowerCase().replaceAll(" ", "-")}`}>{incident.status}</span></td>
 									<td>{incident.complainantName || "Anonymous"}</td><td>{formatDate(incident.incidentDate)}</td>
+					<td><button type="button" className="view-case-button" onClick={() => navigate(`/analyst/case-update?trackingId=${encodeURIComponent(incident.trackingId)}`)}><Eye size={15} aria-hidden="true" />Inspect</button></td>
 								</tr>)}
 							</tbody>
 						</table>

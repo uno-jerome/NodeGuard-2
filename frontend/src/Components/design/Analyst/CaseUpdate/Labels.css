@@ -1,0 +1,28 @@
+.section-label {
+  margin: 0 0 10px;
+  color: #8da4cf;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.secondary-text {
+  color: #9db3d5;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.inline-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(123, 146, 201, 0.35);
+  background: rgba(18, 31, 49, 0.9);
+  color: #edf3ff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}

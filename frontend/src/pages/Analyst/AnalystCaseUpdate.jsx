@@ -1,11 +1,12 @@
 import AnalystHeader from "../../Components/navbar/AnalystHeader";
-import { ArrowLeft, CheckCircle2, Copy, Download, Eye, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Download, Eye, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
-import "../../Components/design/AnalystCaseUpdate.css";
+import "../../Components/design/Analyst/AnalystCaseUpdate.css";
 
 const INCIDENT_STATUSES = ["Reported", "Under Review", "Investigating", "Resolved", "Closed"];
+const CUSTODY_LOGS_PER_PAGE = 5;
 
 const normalizeTrackingId = (value) => String(value || "").trim().toUpperCase().replace(/\s+/g, "");
 
@@ -51,6 +52,9 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [caseId, setCaseId] = useState(searchParams.get("trackingId") || "");
   const [incident, setIncident] = useState(null);
+  const [custodyLogs, setCustodyLogs] = useState([]);
+  const [isNewestFirst, setIsNewestFirst] = useState(false);
+  const [custodyLogPage, setCustodyLogPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -59,6 +63,8 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
   const [localNotes, setLocalNotes] = useState([]);
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [noteError, setNoteError] = useState("");
+  const [isExportingReport, setIsExportingReport] = useState(false);
+  const [reportExportError, setReportExportError] = useState("");
   const [evidencePreview, setEvidencePreview] = useState(null);
   const [isVerifyingEvidence, setIsVerifyingEvidence] = useState(false);
   const [evidenceVerification, setEvidenceVerification] = useState({});
@@ -73,6 +79,7 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
     const normalized = normalizeTrackingId(trackingIdValue);
     if (!normalized) {
       setIncident(null);
+      setCustodyLogs([]);
       setError("Enter a valid case ID to view an incident report.");
       return;
     }
@@ -89,17 +96,22 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
         throw new Error("No incident matches that case ID.");
       }
 
-      setIncident(found);
+      const detailsResponse = await axiosClient.get(`/incidents/${found._id}`);
+      const caseDetails = detailsResponse.data.incident;
+      setIncident(caseDetails);
+      setCustodyLogs(Array.isArray(detailsResponse.data.custodyLogs) ? detailsResponse.data.custodyLogs : []);
+      setCustodyLogPage(1);
       setEvidenceVerification(Object.fromEntries(
-        (found.evidenceFiles || []).filter((file) => file?._id).map((file) => [file._id, file.verificationStatus || 'not-verified'])
+        (caseDetails.evidenceFiles || []).filter((file) => file?._id).map((file) => [file._id, file.verificationStatus || 'not-verified'])
       ));
       setEvidenceVerificationResults({});
       setCaseId(found.trackingId);
       const nextParams = new URLSearchParams(searchParams);
-      nextParams.set("trackingId", found.trackingId);
+      nextParams.set("trackingId", caseDetails.trackingId);
       setSearchParams(nextParams, { replace: true });
     } catch (requestError) {
       setIncident(null);
+      setCustodyLogs([]);
       setError(requestError.response?.data?.message || requestError.message || "Unable to load this case.");
     } finally {
       setIsLoading(false);
@@ -118,6 +130,16 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
     if (!incident) return "review";
     return String(incident.status).toLowerCase().replace(/\s+/g, "-");
   }, [incident]);
+
+  const orderedCustodyLogs = useMemo(
+    () => isNewestFirst ? [...custodyLogs].reverse() : custodyLogs,
+    [custodyLogs, isNewestFirst]
+  );
+  const totalCustodyLogPages = Math.max(1, Math.ceil(orderedCustodyLogs.length / CUSTODY_LOGS_PER_PAGE));
+  const visibleCustodyLogs = orderedCustodyLogs.slice(
+    (custodyLogPage - 1) * CUSTODY_LOGS_PER_PAGE,
+    custodyLogPage * CUSTODY_LOGS_PER_PAGE
+  );
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -276,6 +298,32 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
       setNoteError(requestError.response?.data?.message || "Unable to save this note. Please try again.");
     } finally {
       setIsSavingNote(false);
+    }
+  };
+
+  const exportIncidentReport = async () => {
+    if (!incident?._id || isExportingReport) return;
+    if (!["Resolved", "Closed"].includes(incident.status)) {
+      setReportExportError("PDF export is available only when the case is resolved or closed.");
+      return;
+    }
+
+    setIsExportingReport(true);
+    setReportExportError("");
+    try {
+      const response = await axiosClient.get(`/incidents/${incident._id}/dossier`, { responseType: "blob" });
+      const downloadUrl = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `Dossier-${incident.trackingId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    } catch {
+      setReportExportError("Unable to export this report. Please try again.");
+    } finally {
+      setIsExportingReport(false);
     }
   };
 
@@ -494,16 +542,71 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
                       <div className="chain-log-toolbar" aria-label="Log filters">
                         <span className="ledger-records">
                           <span className="ledger-dot" />
-                          LEDGER RECORDS: {incident.evidenceFiles?.length || 0} TOTAL
+                          LEDGER RECORDS: {custodyLogs.length} TOTAL
                         </span>
                         <span className="append-only-pill" aria-label="Ledger is append-only">Append-Only</span>
-                        <button type="button" className="log-action-pill">All Actions ({incident.notes?.length || 0})</button>
-                        <button type="button" className="log-action-pill log-sort-pill">Oldest First</button>
+                        <button type="button" className="log-action-pill">All Actions ({custodyLogs.length})</button>
+                        <button
+                          type="button"
+                          className="log-action-pill log-sort-pill"
+                          onClick={() => {
+                            setIsNewestFirst((current) => !current);
+                            setCustodyLogPage(1);
+                          }}
+                          aria-pressed={isNewestFirst}
+                        >
+                          {isNewestFirst ? "Newest First" : "Oldest First"}
+                        </button>
                       </div>
 
-                      <div className="chain-log-empty-box" aria-live="polite">
-                        No audit entries matching the selected filter criteria
-                      </div>
+                      {visibleCustodyLogs.length ? (
+                        <div className="chain-log-entries" role="list" aria-label="Chain of custody entries">
+                          {visibleCustodyLogs.map((log) => (
+                            <article className="chain-log-entry" role="listitem" key={log._id}>
+                              <div className="chain-log-entry-header">
+                                <strong>{String(log.action || "Activity").replace(/_/g, " ")}</strong>
+                                <time dateTime={log.timestamp}>{formatLogTimestamp(log.timestamp)}</time>
+                              </div>
+                              <p>{log.details || "No details recorded."}</p>
+                              <div className="chain-log-entry-meta">
+                                <span>By {log.performedBy?.name || log.performedBy?.email || "System"}</span>
+                                {log.evidenceFileId?.originalFilename && <span>Evidence: {log.evidenceFileId.originalFilename}</span>}
+                                {log.ipAddress && <span>IP: {log.ipAddress}</span>}
+                              </div>
+                              {log.calculatedHash && <p className="chain-log-entry-hash">Hash: {log.calculatedHash}</p>}
+                            </article>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="chain-log-empty-box" aria-live="polite">
+                          No chain of custody entries recorded for this case.
+                        </div>
+                      )}
+                      {orderedCustodyLogs.length > 0 && (
+                        <nav className="chain-log-pagination" aria-label="Chain of custody pages">
+                          <button
+                            type="button"
+                            className="chain-log-page-button"
+                            onClick={() => setCustodyLogPage((page) => Math.max(1, page - 1))}
+                            disabled={custodyLogPage === 1}
+                          >
+                            <ChevronLeft size={16} aria-hidden="true" />
+                            Previous
+                          </button>
+                          <span className="chain-log-page-count" aria-live="polite">
+                            Page {custodyLogPage} of {totalCustodyLogPages}
+                          </span>
+                          <button
+                            type="button"
+                            className="chain-log-page-button"
+                            onClick={() => setCustodyLogPage((page) => Math.min(totalCustodyLogPages, page + 1))}
+                            disabled={custodyLogPage === totalCustodyLogPages}
+                          >
+                            Next
+                            <ChevronRight size={16} aria-hidden="true" />
+                          </button>
+                        </nav>
+                      )}
                     </div>
                   </div>
 
@@ -558,6 +661,17 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
                           </article>
                         ))}
                       </div>
+                      {reportExportError && <p className="note-save-error" role="alert">{reportExportError}</p>}
+                      <button
+                        type="button"
+                        className="inline-action notes-export-button"
+                        onClick={exportIncidentReport}
+                        disabled={isExportingReport}
+                        title={["Resolved", "Closed"].includes(incident.status) ? "Export the case report as PDF" : "Resolve or close the case to enable PDF export"}
+                      >
+                        <Download size={15} aria-hidden="true" />
+                        {isExportingReport ? "Exporting PDF..." : "Export PDF Report"}
+                      </button>
                     </div>
                   </aside>
                 </div>
