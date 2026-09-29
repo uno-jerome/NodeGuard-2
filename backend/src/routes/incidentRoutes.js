@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import {
   createPublicIncident,
   getIncidentByTrackingId,
@@ -14,8 +15,11 @@ import { upload } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
-router.post('/', upload.array('files'), createPublicIncident);
-router.get('/track/:trackingId', getIncidentByTrackingId);
+const makePublicLimiter = (max, message) =>
+  rateLimit({ windowMs: 15 * 60 * 1000, max, standardHeaders: true, legacyHeaders: false, message: { success: false, message } });
+
+router.post('/', makePublicLimiter(30, 'Too many submissions. Please try again later.'), upload.array('files'), createPublicIncident);
+router.get('/track/:trackingId', makePublicLimiter(60, 'Too many tracking requests. Please try again later.'), getIncidentByTrackingId);
 router.get('/', verifyToken, getIncidents);
 router.get('/audit', verifyToken, getAuditLog);
 router.get('/:id', verifyToken, getIncidentById);

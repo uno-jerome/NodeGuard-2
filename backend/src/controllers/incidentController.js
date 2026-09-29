@@ -19,7 +19,8 @@ export const createPublicIncident = async (req, res) => {
 
 export const getIncidentByTrackingId = async (req, res) => {
   try {
-    const incident = await Incident.findOne({ trackingId: req.params.trackingId.toUpperCase() })
+    const rawId = String(req.params.trackingId).replace(/[^A-Z0-9-]/gi, '').toUpperCase();
+    const incident = await Incident.findOne({ trackingId: rawId })
       .select('trackingId title category status priority incidentDate notes createdAt');
     if (!incident) return res.status(404).json({ success: false, message: 'Incident not found with given tracking ID.' });
     return res.status(200).json({ success: true, incident });
