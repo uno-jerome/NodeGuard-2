@@ -5,6 +5,7 @@ import { ProvisionStaffModal } from "../../Components/Elements/AddNewStaff";
 import { SessionProvisioningLog } from "../../Components/Elements/SessionProvisonLog";
 import "../../Components/design/Admin/UserManagement.css";
 import axiosClient from "../../api/axiosClient";
+import auditLogo from "../../public/audit_logo.svg";
 
 const FORENSIC_CLEARANCE_BADGES = [
 	{ id: "role", label: "Roles: Investigator", variant: "blue" },
@@ -21,7 +22,7 @@ const FORENSIC_ROLE_CLEARANCE_CARD = {
 
 const PROVISION_NOTE = {
 	label: "Forensic Security & Audit",
-	icon : "https://www.figma.com/api/mcp/asset/00a97632-2c2e-4fed-8bc7-fe3f130900ac.svg",
+	icon: auditLogo,
 	Description: "All investigator activities—logging in, viewing evidence files, calculating checksums, and updating notes—are recorded in the append-only Chain of Custody ledger.",
 };
 
@@ -29,6 +30,8 @@ export default function UserManament() {
 	const [isProvisionModalOpen, setProvisionModalOpen] = useState(false);
 	const [entries, setEntries] = useState([]);
 	const [provisionError, setProvisionError] = useState("");
+	const [removeError, setRemoveError] = useState("");
+	const [removingStaffId, setRemovingStaffId] = useState("");
 
 	useEffect(() => {
 		axiosClient.get("/auth/users").then((res) => {
@@ -57,6 +60,20 @@ export default function UserManament() {
 			setProvisionModalOpen(false);
 		} catch (err) {
 			setProvisionError(err.response?.data?.message || "Failed to provision staff account.");
+		}
+	};
+
+	const handleStaffRemove = async (id) => {
+		if (removingStaffId) return;
+		setRemovingStaffId(id);
+		setRemoveError("");
+		try {
+			await axiosClient.delete(`/auth/users/${id}`);
+			setEntries((current) => current.filter((entry) => entry.id !== id));
+		} catch (err) {
+			setRemoveError(err.response?.data?.message || "Failed to remove staff account.");
+		} finally {
+			setRemovingStaffId("");
 		}
 	};
 
@@ -107,9 +124,11 @@ export default function UserManament() {
 						</div>
 					</div>
 					<div className="user-management-right">
+						{removeError && <p role="alert">{removeError}</p>}
 						<SessionProvisioningLog
 							entries={entries}
-							onRemove={(id) => setEntries((current) => current.filter((entry) => entry.id !== id))}
+							onRemove={handleStaffRemove}
+							removingStaffId={removingStaffId}
 						/>
 						<div className="user-management-note">
 							<div className="user-management-note-title">

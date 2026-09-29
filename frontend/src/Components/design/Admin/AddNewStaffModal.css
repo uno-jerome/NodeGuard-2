@@ -118,6 +118,37 @@
   box-sizing: border-box;
 }
 
+.psm-input-with-suffix {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px 0 14px;
+  border: 1px solid #8fabd4;
+  border-radius: 70px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+}
+
+.psm-field .psm-input-with-suffix input {
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+}
+
+.psm-input-with-suffix:focus-within {
+  outline: 2px solid #4d77b5;
+  outline-offset: 1px;
+}
+
+.psm-input-with-suffix span {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .psm-field input:focus {
   outline: 2px solid #4d77b5;
   outline-offset: 1px;

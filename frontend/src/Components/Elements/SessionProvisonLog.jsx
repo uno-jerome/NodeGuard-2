@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import '../design/Admin/SessionProvisionLog.css';
+import provisionLogo from '../../public/log_logo.svg';
 
-const bookmark = 'https://www.figma.com/api/mcp/asset/00a97632-2c2e-4fed-8bc7-fe3f130900ac.svg';
+const bookmark = provisionLogo;
 
 const nameOf = ({ name, email }) => name?.trim() || email.split('@')[0];
 
@@ -32,7 +33,7 @@ export function useProvisioningLog() {
   return { entries, addStaff, removeStaff, toast, clearToast: () => setToast(null) };
 }
  
-export function SessionProvisioningLog({ entries, onRemove }) {
+export function SessionProvisioningLog({ entries, onRemove, removingStaffId = "" }) {
   const [selected, setSelected] = useState(null);
   const toggle = (id) => setSelected((cur) => (cur === id ? null : id));
  
@@ -68,15 +69,16 @@ export function SessionProvisioningLog({ entries, onRemove }) {
               <div className="meta">
                 <span className="badge">Active</span>
                 <div className="slot">
-                  {e.id === selected ? (
+                  {e.id === selected && e.role !== 'Admin' ? (
                     <button
                       type="button"
+                      disabled={Boolean(removingStaffId)}
                       onClick={(ev) => {
                         ev.stopPropagation();
                         onRemove(e.id);
                       }}
                     >
-                      Delete
+                      {removingStaffId === e.id ? 'Removing...' : 'Remove'}
                     </button>
                   ) : (
                     `Time: ${e.time}`

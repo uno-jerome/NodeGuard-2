@@ -171,6 +171,15 @@ label {
     position: static;
 }
 
+.alert p {
+    font-family: var(--font-ui);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: normal;
+    color: #FFFFFF;
+    padding: 10px 0px;
+}
+
 @media (max-width: 800px) {
     .login-container {
         flex-direction: column;

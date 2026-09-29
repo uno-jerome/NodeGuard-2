@@ -1,5 +1,5 @@
 .spl {
-  width: 380px;
+  width: 420px;
   max-width: 100%;
   height: 250px;
   box-sizing: border-box;
@@ -12,6 +12,11 @@
   border-radius: 10px;
   color: #fff;
   font-family: Inter, system-ui, sans-serif;
+ 
+  }
+
+.spl ul::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
 }
 
 .spl header {

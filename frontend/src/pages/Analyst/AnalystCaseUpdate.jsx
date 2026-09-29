@@ -1,5 +1,5 @@
 import AnalystHeader from "../../Components/navbar/AnalystHeader";
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Download, Eye, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, Eye, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
@@ -17,9 +17,18 @@ const formatDisplayDate = (dateValue) => {
   return date.toLocaleDateString("en-CA");
 };
 
-const formatLogTimestamp = (dateValue) => {
+const formatLogTimestamp = (timestamp) => {
+  if (!timestamp) return "-";
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+};
+
+const formatDisplayTime = (dateValue) => {
+  if (!dateValue) return "";
   const date = new Date(dateValue);
-  return Number.isNaN(date.getTime()) ? "Date unavailable" : date.toLocaleString();
+  if (Number.isNaN(date.getTime())) return "";
+  return `Verified at: ${date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
 };
 
 const formatFileSize = (sizeValue) => {
@@ -66,6 +75,8 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
   const [evidencePreview, setEvidencePreview] = useState(null);
   const [isVerifyingEvidence, setIsVerifyingEvidence] = useState(false);
   const [evidenceVerification, setEvidenceVerification] = useState({});
+  const [evidenceVerificationResults, setEvidenceVerificationResults] = useState({});
+  const [copiedHash, setCopiedHash] = useState("");
   const [previewingFileId, setPreviewingFileId] = useState("");
   const [downloadingFileId, setDownloadingFileId] = useState("");
   const [evidenceActionError, setEvidenceActionError] = useState("");
@@ -100,7 +111,8 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
       setEvidenceVerification(Object.fromEntries(
         (caseDetails.evidenceFiles || []).filter((file) => file?._id).map((file) => [file._id, file.verificationStatus || 'not-verified'])
       ));
-      setCaseId(caseDetails.trackingId);
+      setEvidenceVerificationResults({});
+      setCaseId(found.trackingId);
       const nextParams = new URLSearchParams(searchParams);
       nextParams.set("trackingId", caseDetails.trackingId);
       setSearchParams(nextParams, { replace: true });
@@ -229,19 +241,25 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
       ...current,
       ...Object.fromEntries(files.filter((file) => file._id).map((file) => [file._id, "verifying"])),
     }));
+    setEvidenceVerificationResults({});
 
     const results = await Promise.all(files.map(async (file) => {
-      if (!file._id) return [file._id, "error"];
+      if (!file._id) return [file._id, { verificationStatus: "error", errorMessage: "Evidence record ID is missing." }];
       try {
         const response = await axiosClient.post(`/evidence/${file._id}/verify`);
         const verificationStatus = response.data.verificationStatus || (response.data.match ? "verified" : "mismatch");
-        return [file._id, verificationStatus];
-      } catch {
-        return [file._id, "error"];
+        return [file._id, { ...response.data, verificationStatus }];
+      } catch (requestError) {
+        return [file._id, {
+          verificationStatus: "error",
+          errorMessage: requestError.response?.data?.message || "Unable to verify this evidence file.",
+        }];
       }
     }));
 
-    const savedVerificationMap = Object.fromEntries(results);
+    const verificationResults = Object.fromEntries(results);
+    const savedVerificationMap = Object.fromEntries(results.map(([id, result]) => [id, result.verificationStatus]));
+    setEvidenceVerificationResults(verificationResults);
     setEvidenceVerification((current) => ({ ...current, ...savedVerificationMap }));
     setIncident((currentIncident) => {
       if (!currentIncident) return currentIncident;
@@ -253,12 +271,22 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
           return {
             ...file,
             verificationStatus: updatedStatus,
-            verifiedAt: new Date().toISOString(),
+            verifiedAt: verificationResults[file._id]?.verifiedAt || new Date().toISOString(),
           };
         }),
       };
     });
     setIsVerifyingEvidence(false);
+  };
+
+  const copyEvidenceHash = async (hash) => {
+    try {
+      await navigator.clipboard.writeText(hash);
+      setCopiedHash(hash);
+      window.setTimeout(() => setCopiedHash(""), 1500);
+    } catch {
+      setEvidenceActionError("Unable to copy the SHA-256 hash to the clipboard.");
+    }
   };
 
   const addInternalNote = async () => {
@@ -462,6 +490,49 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
                                 <Download size={16} aria-hidden="true" />
                               </button>
                             </span>
+                            <div className="evidence-integrity-details">
+                              <div className="evidence-hash-row">
+                                <span>Original SHA-256:</span>
+                                <code>{file.sha256Hash || "Unavailable"}</code>
+                                {file.sha256Hash && (
+                                  <button type="button" onClick={() => copyEvidenceHash(file.sha256Hash)} title="Copy SHA-256 hash">
+                                    <Copy size={14} aria-hidden="true" />
+                                    {copiedHash === file.sha256Hash ? "Copied" : "Copy"}
+                                  </button>
+                                )}
+                              </div>
+                              <div className="evidence-hash-row">
+                                <span>Baseline MD5:</span>
+                                <code>{file.md5Hash || "Unavailable"}</code>
+                              </div>
+                            </div>
+                            {evidenceVerificationResults[file._id] && (() => {
+                              const result = evidenceVerificationResults[file._id];
+                              const isClean = result.verificationStatus === "verified";
+                              const heading = isClean
+                                ? "Cryptographic integrity confirmed (clean hash)"
+                                : result.verificationStatus === "mismatch"
+                                  ? "Integrity mismatch detected"
+                                  : "Integrity check failed";
+
+                              return (
+                                <div className={`evidence-clean-hash ${isClean ? "verified" : "failed"}`} role="status">
+                                  <div className="evidence-clean-hash-heading">
+                                    {isClean ? <CheckCircle2 size={18} aria-hidden="true" /> : <XCircle size={18} aria-hidden="true" />}
+                                    <strong>{heading}</strong>
+                                    <span>{formatDisplayTime(result.verifiedAt)}</span>
+                                  </div>
+                                  <p>
+                                    {result.errorMessage || (isClean
+                                      ? "Recalculated SHA-256 matches the original intake baseline."
+                                      : result.match === false
+                                        ? "Recalculated SHA-256 does not match the original intake baseline."
+                                        : "The file could not be verified against its intake baseline.")}
+                                  </p>
+                                  {result.currentHash && <code>SHA-256: {result.currentHash}</code>}
+                                </div>
+                              );
+                            })()}
                           </div>
                         ))}
                       </div>

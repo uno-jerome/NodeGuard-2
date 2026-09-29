@@ -8,11 +8,12 @@ export const PROVISION_STAFF_HEADER = {
 
 export const PROVISION_STAFF_FIELDS = [
 	{ name: 'name', label: 'Profile Name', type: 'text', required: true },
-	{ name: 'email', label: 'Agency Email', type: 'email', required: true },
+	{ name: 'username', label: 'Username', type: 'text', required: true },
 	{ name: 'password', label: 'Generate Password', type: 'password', required: true },
 ];
 
 const DEFAULT_ROLE = 'Investigator';
+const USERNAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
 
 export function ProvisionStaffModal({ isOpen, onSave, onClose, serverError }) {
 	const [values, setValues] = useState(() =>
@@ -22,12 +23,20 @@ export function ProvisionStaffModal({ isOpen, onSave, onClose, serverError }) {
 	if (!isOpen) return null;
 
 	const setField = (name, value) => setValues((v) => ({ ...v, [name]: value }));
-	const isValid = PROVISION_STAFF_FIELDS.every((f) => !f.required || values[f.name].trim());
+	const username = values.username.trim();
+	const isValid = PROVISION_STAFF_FIELDS.every((f) => !f.required || values[f.name].trim())
+		&& USERNAME_PATTERN.test(username);
 
 	const submit = (e) => {
 		e.preventDefault();
 		if (!isValid) return;
-		onSave({ name: values.name, email: values.email, role: DEFAULT_ROLE });
+		onSave({
+			name: values.name.trim(),
+			username,
+			email: `${username.toLowerCase()}@nodeguard.local`,
+			password: values.password,
+			role: DEFAULT_ROLE,
+		});
 	};
 
 	return (
@@ -59,13 +68,31 @@ export function ProvisionStaffModal({ isOpen, onSave, onClose, serverError }) {
 							<label htmlFor={f.name}>
 								{f.label} {f.required && <span>*</span>}
 							</label>
-							<input
-								id={f.name}
-								type={f.type}
-								value={values[f.name]}
-								onChange={(e) => setField(f.name, e.target.value)}
-								required={f.required}
-							/>
+							{f.name === 'username' ? (
+								<div className="psm-input-with-suffix">
+									<input
+										id={f.name}
+										type={f.type}
+										value={values[f.name]}
+										onChange={(e) => setField(f.name, e.target.value)}
+										required={f.required}
+										pattern="[A-Za-z0-9._-]+"
+										maxLength={64}
+										autoCapitalize="none"
+										autoComplete="username"
+										title="Use letters, numbers, dots, underscores, or hyphens."
+									/>
+									<span aria-hidden="true">@nodeguard.local</span>
+								</div>
+							) : (
+								<input
+									id={f.name}
+									type={f.type}
+									value={values[f.name]}
+									onChange={(e) => setField(f.name, e.target.value)}
+									required={f.required}
+								/>
+							)}
 						</div>
 					))}
 					<div className="psm-footer">
