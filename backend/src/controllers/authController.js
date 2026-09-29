@@ -136,9 +136,26 @@ export const getUsers = async (req, res) => {
   }
 };
 
+export const deactivateUser = async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.params.id, role: 'INVESTIGATOR', isActive: true });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Active investigator account not found.' });
+    }
+
+    user.isActive = false;
+    await user.save();
+
+    return res.status(200).json({ success: true, message: 'Staff account deactivated.' });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: 'Invalid staff account ID.' });
+  }
+};
+
 export default {
   login,
   changePassword,
   register,
   getUsers,
+  deactivateUser,
 };

@@ -7,7 +7,7 @@ import LogoName from "../../public/Nodeguard Logo.png";
 import iconDashboard from "../../public/layout-dashboard.png";
 import iconUser from "../../public/layout-user.png";
 import iconHelpCircle from "../../public/layout-custody.png";
-const avatar = "https://www.figma.com/api/mcp/asset/25ddeda4-f3be-4366-9a45-39db2f40bf21.png";
+import avatar from "../../public/profile_logo.svg";
 
 const NAVIGATION_ITEMS = [
     { label: "Dashboard", path: "/admin", icon: iconDashboard },
@@ -48,7 +48,18 @@ export default function AdminHeader({ items = NAVIGATION_ITEMS }) {
       {isAuthenticated ? (
         <details className="admin-profile-menu">
           <summary className="user-info" aria-label="Open profile menu">
-            <img src={user.avatar || avatar} alt="" className="user-avatar" />
+            <img
+              src={user.avatar || avatar}
+              alt=""
+              className="user-avatar"
+              data-fallback={user.avatar ? "remote" : "local"}
+              onError={(event) => {
+                if (event.currentTarget.dataset.fallback !== "local") {
+                  event.currentTarget.dataset.fallback = "local";
+                  event.currentTarget.src = avatar;
+                }
+              }}
+            />
             <div className="user-details">
               <span className="user-name">{user.name}</span>
               <span className="user-email">{user.email}</span>

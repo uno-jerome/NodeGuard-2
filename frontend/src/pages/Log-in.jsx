@@ -83,9 +83,9 @@ export default function Login() {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+            {error && <p role="alert">{error}</p>}
           </div>
 
-          {error && <p role="alert">{error}</p>}
           <button type="submit" className="login-button" disabled={loading}>
             {loading ? "Logging in..." : "Log In"}
           </button>

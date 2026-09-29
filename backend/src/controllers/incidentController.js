@@ -36,7 +36,7 @@ export const getIncidents = async (req, res) => {
     const [incidents, total] = await Promise.all([
       Incident.find(filter)
         .populate('assignedTo', 'name email role')
-        .populate('evidenceFiles', 'originalFilename fileSize mimeType verificationStatus verifiedAt')
+        .populate('evidenceFiles', 'originalFilename fileSize mimeType sha256Hash md5Hash verificationStatus verifiedAt')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
