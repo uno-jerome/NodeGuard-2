@@ -108,7 +108,7 @@ export default function App() {
           />
         </Route>
 
-        <Route element={<RequireRole roles={["ADMIN", "INVESTIGATOR"]} />}>
+        <Route element={<RequireRole roles={["INVESTIGATOR"]} />}>
           <Route path="/analyst"
             element={
               <div data-portal="analyst" className="portal-container">

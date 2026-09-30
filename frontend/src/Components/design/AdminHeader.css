@@ -5,9 +5,9 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
-  padding: 0 32px; 
-  gap: 200px;
+  justify-content: space-between;
+  padding: 0 32px;
+  gap: 24px;
   background-color: #1a1525;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -203,4 +203,70 @@
 .user-info-login:hover {
   background: rgba(74, 112, 169, 0.7);
   border-color: #3b82f6;
+}
+
+@media (max-width: 960px) {
+  .admin-header {
+    height: auto;
+    min-height: 55px;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 8px 20px;
+  }
+
+  .admin-header .nav-container {
+    order: 1;
+    flex: 1 0 100%;
+    justify-content: flex-start;
+    gap: 8px;
+    height: auto;
+  }
+
+  .admin-header .nav-item {
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: 0;
+    padding: 0 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header {
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .admin-header .client-header-name {
+    display: none;
+  }
+
+  .admin-header .user-details {
+    display: none;
+  }
+
+  .admin-header .nav-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .admin-header .nav-item {
+    flex-direction: column;
+    gap: 3px;
+    min-height: 48px;
+    height: auto;
+    padding: 5px 2px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .admin-header .nav-label {
+    font-size: 11px;
+    line-height: 1.15;
+  }
+
+  .admin-header .user-info {
+    gap: 8px;
+    padding: 0 10px;
+  }
 }

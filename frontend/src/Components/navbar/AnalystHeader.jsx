@@ -1,5 +1,5 @@
 import "../design/AnalystHeader.css";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, LogIn, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import logoIcon from "../../public/Nodeguard Icon.png";
@@ -25,10 +25,10 @@ export default function AnalystHeader({ items = NAVIGATION_ITEMS }) {
 
   return (
     <header className="analyst-header">
-      <div className="logo-container">
+      <Link className="logo-container" to="/Client" aria-label="NodeGuard analyst home">
         <img src={logoIcon} alt="" className="client-header-icon" />
-        <img src={LogoName} alt="NodeGuard" className="client-header-name" />
-      </div>
+        <img src={LogoName} alt="" className="client-header-name" />
+      </Link>
 
     <nav className="nav-container" aria-label="Analyst navigation">
         {items.map((item) => (

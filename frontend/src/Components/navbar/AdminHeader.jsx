@@ -1,5 +1,5 @@
 import "../design/AdminHeader.css";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, LogIn, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import logoIcon from "../../public/Nodeguard Icon.png";
@@ -27,10 +27,10 @@ export default function AdminHeader({ items = NAVIGATION_ITEMS }) {
 
   return (
     <header className="admin-header">
-      <div className="logo-container">
+      <Link className="logo-container" to="/Client" aria-label="NodeGuard admin home">
         <img src={logoIcon} alt="" className="client-header-icon" />
         <img src={LogoName} alt="NodeGuard" className="client-header-name" />
-      </div>
+      </Link>
 
     <nav className="nav-container" aria-label="Admin navigation">
         {items.map((item) => (
