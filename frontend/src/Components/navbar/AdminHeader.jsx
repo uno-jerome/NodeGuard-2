@@ -1,0 +1,85 @@
+import "../design/AdminHeader.css";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ChevronDown, LogIn, LogOut } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import logoIcon from "../../public/Nodeguard Icon.png";
+import LogoName from "../../public/Nodeguard Logo.png";
+import iconDashboard from "../../public/layout-dashboard.png";
+import iconUser from "../../public/layout-user.png";
+import iconHelpCircle from "../../public/layout-custody.png";
+import avatar from "../../public/profile_logo.svg";
+
+const NAVIGATION_ITEMS = [
+    { label: "Dashboard", path: "/admin", icon: iconDashboard },
+    { label: "User Management", path: "/admin/users", icon: iconUser },
+    { label: "Chain-of-Custody Log", path: "/admin/audit", icon: iconHelpCircle },
+  ];
+
+export default function AdminHeader({ items = NAVIGATION_ITEMS }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  return (
+    <header className="admin-header">
+      <Link className="logo-container" to="/Client" aria-label="NodeGuard admin home">
+        <img src={logoIcon} alt="" className="client-header-icon" />
+        <img src={LogoName} alt="NodeGuard" className="client-header-name" />
+      </Link>
+
+    <nav className="nav-container" aria-label="Admin navigation">
+        {items.map((item) => (
+          <button
+            key={item.path}
+            className={`nav-item ${location.pathname === item.path ? "active" : ""}`}
+            onClick={() => navigate(item.path)}
+          >
+            <img src={item.icon} alt="" className="nav-icon" />
+            <span className="nav-label">{item.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {isAuthenticated ? (
+        <details className="admin-profile-menu">
+          <summary className="user-info" aria-label="Open profile menu">
+            <img
+              src={user.avatar || avatar}
+              alt=""
+              className="user-avatar"
+              data-fallback={user.avatar ? "remote" : "local"}
+              onError={(event) => {
+                if (event.currentTarget.dataset.fallback !== "local") {
+                  event.currentTarget.dataset.fallback = "local";
+                  event.currentTarget.src = avatar;
+                }
+              }}
+            />
+            <div className="user-details">
+              <span className="user-name">{user.name}</span>
+              <span className="user-email">{user.email}</span>
+            </div>
+            <ChevronDown size={15} aria-hidden="true" />
+          </summary>
+          <div className="admin-profile-dropdown">
+            <button type="button" onClick={handleLogout}>
+              <LogOut size={16} aria-hidden="true" />
+              Log Out
+            </button>
+          </div>
+        </details>
+      ) : (
+        <button className="user-info user-info-login" type="button" onClick={() => navigate("/login")}>
+          <LogIn size={17} aria-hidden="true" />
+          <span className="user-name">Log In</span>
+        </button>
+      )}
+      
+    </header>
+  );
+}

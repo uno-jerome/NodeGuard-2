@@ -38,6 +38,20 @@ const evidenceFileSchema = new mongoose.Schema(
       required: [true, 'MD5 hash is required'],
       trim: true,
     },
+    verificationStatus: {
+      type: String,
+      enum: ['not-verified', 'verifying', 'verified', 'mismatch', 'error'],
+      default: 'not-verified',
+    },
+    verificationDetails: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    verifiedAt: {
+      type: Date,
+      default: null,
+    },
     uploadedAt: {
       type: Date,
       default: Date.now,

@@ -1,0 +1,186 @@
+.spl {
+  width: 420px;
+  max-width: 100%;
+  height: 250px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 14px;
+  background: rgba(3, 6, 23, 0.7);
+  border: 1px solid #8fabd4;
+  border-radius: 10px;
+  color: #fff;
+  font-family: Inter, system-ui, sans-serif;
+ 
+  }
+
+.spl ul::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+.spl header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 4px 16px;
+  border-bottom: 1px solid #b9bcc6;
+}
+
+.spl header img {
+  width: 13px;
+  height: 17px;
+}
+
+.spl h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.spl header span {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: #4d77b5;
+}
+
+.spl .empty {
+  margin: auto;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.spl ul {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.spl li {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 3px 8px;
+  background: rgba(206, 212, 218, 0.2);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.spl li:hover,
+.spl li.on {
+  background: rgba(206, 212, 218, 0.3);
+}
+
+.spl li.on {
+  border-color: #8fabd4;
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 4px 0;
+  min-width: 0;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+
+.who p {
+  margin: 0;
+  font-size: 11px;
+}
+
+.who p:first-child {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.who p:last-child {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.meta {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+}
+
+.badge {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #26b719;
+  background: rgba(38, 183, 25, 0.2);
+  border: 0.3px solid #26b719;
+  border-radius: 5px;
+}
+
+/* Same height for the time and the Delete button, so rows don't jump */
+.slot {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.slot button {
+  padding: 4px 8px;
+  font: 500 10px Inter, system-ui, sans-serif;
+  color: #ff5a5f;
+  background: rgba(255, 90, 95, 0.18);
+  border: 0.3px solid #ff5a5f;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Top notification */
+.spl-toast {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 1000;
+  max-width: calc(100% - 32px);
+  padding: 8px 12px;
+  font: 12px Inter, system-ui, sans-serif;
+  color: #fff;
+  background: #0b1330;
+  border: 1px solid #26b719;
+  border-radius: 8px;
+  cursor: pointer;
+  transform: translate(-50%, -140%);
+  transition: transform 0.25s;
+}
+
+.spl-toast.show {
+  transform: translate(-50%, 0);
+}
+
+.spl-toast b {
+  font-weight: 500;
+  color: #26b719;
+}
+
+.spl-toast.removed {
+  border-color: #ff5a5f;
+}
+
+.spl-toast.removed b {
+  color: #ff5a5f;
+}

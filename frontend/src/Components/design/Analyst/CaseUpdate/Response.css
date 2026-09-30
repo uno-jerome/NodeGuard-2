@@ -1,0 +1,45 @@
+@media (max-width: 980px) {
+  .meta-grid,
+  .case-content-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .case-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .analyst-case-update {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .case-title-row,
+  .case-update-topbar,
+  .status-line,
+  .notes-box header,
+  .evidence-top,
+  .log-label-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .log-table-header {
+    display: none;
+  }
+
+  .case-title {
+    font-size: 2rem;
+  }
+
+  .log-row {
+    grid-template-columns: 1fr;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+}

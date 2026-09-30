@@ -4,27 +4,28 @@ import ChainOfCustodyLog from '../models/ChainOfCustodyLog.js';
 import { computeFileHashes } from './forensicService.js';
 import { generateTrackingId } from '../utils/trackingIdGenerator.js';
 
-export const registerPublicIncident = async (data, file, ipAddress) => {
+export const registerPublicIncident = async (data, files, ipAddress) => {
   const trackingId = await generateTrackingId();
   const incident = new Incident({
     trackingId,
     title: data.title,
     category: data.category,
+    categoryDetails: data.categoryDetails || '',
     platform: data.platform || 'Web',
+    platformDetails: data.platformDetails || '',
     suspectIdentifiers: data.suspectIdentifiers || '',
     estimatedLoss: data.estimatedLoss ? Number(data.estimatedLoss) : 0,
     narrative: data.narrative,
     incidentDate: data.incidentDate || Date.now(),
     complainantName: data.complainantName || 'Anonymous',
     complainantEmail: data.complainantEmail || '',
+    complainantContact: data.complainantContact || '',
   });
 
-  let evidenceFile = null;
-  let hashes = null;
-
-  if (file) {
-    hashes = await computeFileHashes(file.path);
-    evidenceFile = await EvidenceFile.create({
+  const evidenceUploads = Array.isArray(files) ? files : files ? [files] : [];
+  const evidenceRecords = await Promise.all(evidenceUploads.map(async (file) => {
+    const hashes = await computeFileHashes(file.path);
+    const evidenceFile = await EvidenceFile.create({
       incidentId: incident._id,
       originalFilename: file.originalname,
       storedFilename: file.filename,
@@ -34,23 +35,25 @@ export const registerPublicIncident = async (data, file, ipAddress) => {
       md5Hash: hashes.md5,
     });
     incident.evidenceFiles.push(evidenceFile._id);
-  }
+    return { file, evidenceFile, hashes };
+  }));
 
   await incident.save();
 
-  await ChainOfCustodyLog.create({
+  const custodyRecords = evidenceRecords.length > 0 ? evidenceRecords : [null];
+  await Promise.all(custodyRecords.map((record) => ChainOfCustodyLog.create({
     incidentId: incident._id,
-    evidenceFileId: evidenceFile ? evidenceFile._id : null,
+    evidenceFileId: record?.evidenceFile._id || null,
     performedBy: null,
     action: 'INGESTION',
-    details: evidenceFile
-      ? `Public incident created with initial evidence: ${file.originalname}`
+    details: record
+      ? `Public incident created with initial evidence: ${record.file.originalname}`
       : 'Public incident created without initial evidence file',
-    calculatedHash: hashes ? hashes.sha256 : null,
+    calculatedHash: record?.hashes.sha256 || null,
     ipAddress: ipAddress || '127.0.0.1',
-  });
+  })));
 
-  return { trackingId, incident, evidenceFile };
+  return { trackingId, incident, evidenceFiles: evidenceRecords.map(({ evidenceFile }) => evidenceFile) };
 };
 
 export default {

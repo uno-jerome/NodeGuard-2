@@ -1,0 +1,358 @@
+
+
+.track-report-page {
+  --track-reported: #3b82f6;
+  --track-reported-bg: rgb(34 37 81 / 50%);
+  --track-review: #e9b21b;
+  --track-review-bg: rgb(92 70 10 / 50%);
+  --track-investigation: #f04875;
+  --track-investigation-border: #99173a;
+  --track-investigation-bg: rgb(90 9 30 / 50%);
+  --track-resolved: #26b719;
+  --track-resolved-bg: rgb(19 95 12 / 50%);
+  min-height: 100vh;
+  padding: 54px 20px 88px;
+  color: #edf3ff;
+  background:
+    radial-gradient(ellipse at 50% 24%, rgba(54, 91, 151, 0.58), transparent 57%),
+    linear-gradient(180deg, #151a22 0%, #10141b 58%, #1b2b42 100%);
+  padding-top:10px;
+}
+
+.track-report-shell {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.track-report-heading {
+  margin: 0 0 28px;
+}
+
+.track-report-heading p {
+  margin: 0 0 8px;
+  color: #82b5ff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.track-report-heading h1 {
+  margin: 0;
+  color: #f2f6fd;
+  font-family: var(--font-display, Calibri, sans-serif);
+  font-size: clamp(30px, 5vw, 42px);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.track-report-form {
+  padding: 24px;
+  border: 1px solid rgba(139, 169, 216, 0.24);
+  border-radius: 12px;
+  background: rgba(12, 17, 25, 0.88);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.25);
+}
+
+.track-report-form label {
+  display: block;
+  margin-bottom: 10px;
+  color: #c4d1e4;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.track-report-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.track-report-input-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid rgba(141, 171, 222, 0.35);
+  border-radius: 7px;
+  outline: none;
+  background: #111722;
+  color: #f0f5ff;
+  font: inherit;
+}
+
+.track-report-input-row input::placeholder {
+  color: #75839a;
+}
+
+.track-report-input-row input:focus-visible {
+  border-color: #74aaff;
+  box-shadow: 0 0 0 3px rgba(86, 143, 230, 0.18);
+}
+
+.track-report-input-row button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 126px;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #78a8ed;
+  border-radius: 7px;
+  background: #315d9a;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.track-report-input-row button:hover:not(:disabled) {
+  border-color: #a3c7ff;
+  background: #3b6eaf;
+}
+
+.track-report-input-row button:focus-visible {
+  outline: 2px solid #b7d4ff;
+  outline-offset: 3px;
+}
+
+.track-report-input-row button:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+.track-report-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: track-report-spin 700ms linear infinite;
+}
+
+@keyframes track-report-spin {
+  to { transform: rotate(360deg); }
+}
+
+.track-report-error {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 122, 141, 0.36);
+  border-radius: 7px;
+  background: rgba(75, 25, 35, 0.48);
+  color: #ffd4dc;
+  font-size: 13px;
+}
+
+.tracked-case {
+  margin-top: 22px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(139, 169, 216, 0.27);
+  border-radius: 12px;
+  background: rgba(12, 17, 25, 0.94);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+  animation: tracked-case-enter 220ms ease-out both;
+}
+
+.tracked-case-header {
+  padding: 20px 20px 18px;
+  border-bottom: 1px solid rgba(139, 169, 216, 0.24);
+}
+
+.tracked-case-id-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.tracked-case-id {
+  color: #8ebcff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tracked-case-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border: 1px solid rgba(246, 196, 80, 0.38);
+  border-radius: 999px;
+  background: rgba(246, 196, 80, 0.1);
+  color: #f5d477;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tracked-case-status > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.tracked-case-status.resolved,
+.tracked-case-status.closed {
+  border-color: var(--track-resolved);
+  background: var(--track-resolved-bg);
+  color: var(--track-resolved);
+}
+
+.tracked-case-status.reported {
+  border-color: var(--track-reported);
+  background: var(--track-reported-bg);
+  color: var(--track-reported);
+}
+
+.tracked-case-status.investigating {
+  border-color: var(--track-investigation-border);
+  background: var(--track-investigation-bg);
+  color: var(--track-investigation);
+}
+
+.tracked-case-status.under-review {
+  border-color: var(--track-review);
+  background: var(--track-review-bg);
+  color: var(--track-review);
+}
+
+.tracked-case h2 {
+  margin: 14px 0 16px;
+  color: #edf3ff;
+  font-size: clamp(20px, 3.5vw, 27px);
+  font-weight: 650;
+  line-height: 1.25;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.tracked-case-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid rgba(139, 169, 216, 0.2);
+  border-bottom: 1px solid rgba(139, 169, 216, 0.2);
+}
+
+.tracked-case-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px 14px 17px 0;
+}
+
+.tracked-case-meta > div + div {
+  padding-left: 14px;
+  border-left: 1px solid rgba(139, 169, 216, 0.16);
+}
+
+.tracked-case-meta span {
+  color: #899bb5;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tracked-case-meta strong {
+  color: #e1eaf8;
+  font-size: 13px;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.tracked-case-meta .tracked-case-status-text.reported {
+  color: var(--track-reported);
+}
+
+.tracked-case-meta .tracked-case-status-text.under-review {
+  color: var(--track-review);
+}
+
+.tracked-case-meta .tracked-case-status-text.investigating {
+  color: var(--track-investigation);
+}
+
+.tracked-case-meta .tracked-case-status-text.resolved,
+.tracked-case-meta .tracked-case-status-text.closed {
+  color: var(--track-resolved);
+}
+
+.tracked-case-update-log {
+  margin-top: 14px;
+  padding: 11px 12px;
+  border: 1px solid rgba(139, 169, 216, 0.24);
+  border-radius: 8px;
+  background: rgba(8, 13, 20, 0.72);
+  text-align: left;
+}
+
+.tracked-case-update-log h3 {
+  margin: 0 0 6px;
+  color: #9db1d0;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tracked-case-update-log p {
+  width: 100%;
+  margin: 3px 0 0;
+  color: #b9c3d2;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.tracked-case-update-log p span {
+  color: #7f96b8;
+  font-weight: 650;
+}
+
+
+
+@keyframes tracked-case-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 560px) {
+  .track-report-page {
+    padding: 36px 15px 64px;
+  }
+
+  .track-report-form {
+    padding: 18px 15px;
+  }
+
+  .track-report-input-row {
+    flex-direction: column;
+  }
+
+  .track-report-input-row button {
+    width: 100%;
+  }
+
+  .tracked-case-header {
+    padding: 17px 14px 14px;
+  }
+
+  .tracked-case-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .tracked-case-meta > div,
+  .tracked-case-meta > div + div {
+    padding: 12px 0;
+    border-left: 0;
+  }
+
+  .tracked-case-meta > div + div {
+    border-top: 1px solid rgba(139, 169, 216, 0.14);
+  }
+}

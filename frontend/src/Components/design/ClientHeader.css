@@ -1,0 +1,136 @@
+.client-header {
+	position: relative;
+	display: flex;
+	height: 80px;
+	margin-top: 0;
+	align-items: flex-start;
+	justify-content: center;
+	width: 100%;
+	padding: 0 20px;
+}
+
+.logo-container {
+	display: flex;
+	gap: 8px;
+	background: transparent;
+}
+
+.client-header-icon {
+	width: 44px;
+	height: 44px;
+}
+
+.client-header-name {
+	width: 100px;
+	height: 40px;
+	object-fit: contain;
+}
+
+.client-navbar {
+	position: absolute;
+	top: 5px;
+	left: 50%;
+	display: flex;
+	height: 45px;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding: 0 14px;
+	border-radius: 60px;
+	border: 1px solid rgba(143,171,212, 0.40);
+	background: rgba(41, 43, 44, 0.50);
+	transform: translateX(-50%);
+	white-space: nowrap;
+	box-sizing: border-box;
+	max-width: calc(100% - 24px);
+	min-width: 0;
+	flex-wrap: nowrap;
+}
+
+.client-navbar-button {
+	position: relative;
+	z-index: 1;
+	min-width: 120px;
+	height: 40px;
+	padding: 0 22px;
+	border: 0;
+	border-radius: 40px;
+	background: transparent;
+	color: #ffffff;
+	cursor: pointer;
+	font-family: var(--font-ui);
+	font-size: 15px;
+	line-height: normal;
+    font-weight: 250;
+	transition: background-color 160ms ease, color 160ms ease;
+}
+
+
+
+.client-navbar-button:hover,
+.client-navbar-button[aria-current="page"] {
+	background: rgba(91, 84, 84, 0.3);
+	font-weight: 500;
+}
+
+.client-navbar-button:active {
+	transform: scale(0.97);
+}
+
+.client-navbar-button:focus-visible {
+	outline: 2px solid #8fabd4;
+	outline-offset: 3px;
+}
+
+.client-navbar-pill {
+	display: none;
+}
+
+@media (max-width: 900px) {
+	.logo-container {
+		left: 16px;
+		width: 52px;
+	}
+
+	.client-header-name {
+		display: none;
+	}
+
+	.client-navbar {
+		left: 50%;
+		right: auto;
+		transform: translateX(-50%);
+		gap: 4px;
+		padding: 0 8px;
+	}
+
+	.client-navbar-button {
+		min-width: auto;
+		padding: 0 16px;
+	}
+}
+
+@media (max-width: 600px) {
+	.logo-container {
+		display: none;
+	}
+
+	.client-header {
+		height: 68px;
+	}
+
+	.client-navbar {
+		top: 4px;
+		left: 50%;
+		right: auto;
+		max-width: calc(100% - 18px);
+		transform: translateX(-50%);
+		padding: 0 6px;
+	}
+
+	.client-navbar-button {
+		padding: 0 10px;
+		font-size: 14px;
+		min-width: 0;
+	}
+}

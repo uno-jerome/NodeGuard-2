@@ -10,7 +10,7 @@ export const createPublicIncident = async (req, res) => {
     if (!title || !category || !narrative) {
       return res.status(400).json({ success: false, message: 'Title, category, and narrative are required.' });
     }
-    const { trackingId } = await registerPublicIncident(req.body, req.file, req.ip);
+    const { trackingId } = await registerPublicIncident(req.body, req.files, req.ip);
     return res.status(201).json({ success: true, trackingId });
   } catch (error) {
     return res.status(500).json({ success: false, message: `Failed to create incident: ${error.message}` });
@@ -19,7 +19,8 @@ export const createPublicIncident = async (req, res) => {
 
 export const getIncidentByTrackingId = async (req, res) => {
   try {
-    const incident = await Incident.findOne({ trackingId: req.params.trackingId.toUpperCase() })
+    const rawId = String(req.params.trackingId).replace(/[^A-Z0-9-]/gi, '').toUpperCase();
+    const incident = await Incident.findOne({ trackingId: rawId })
       .select('trackingId title category status priority incidentDate notes createdAt');
     if (!incident) return res.status(404).json({ success: false, message: 'Incident not found with given tracking ID.' });
     return res.status(200).json({ success: true, incident });
@@ -36,7 +37,7 @@ export const getIncidents = async (req, res) => {
     const [incidents, total] = await Promise.all([
       Incident.find(filter)
         .populate('assignedTo', 'name email role')
-        .populate('evidenceFiles', 'originalFilename fileSize mimeType')
+        .populate('evidenceFiles', 'originalFilename fileSize mimeType sha256Hash md5Hash verificationStatus verifiedAt')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
@@ -124,6 +125,9 @@ export const exportDossier = async (req, res) => {
       .populate('assignedTo', 'name email role')
       .populate('evidenceFiles');
     if (!incident) return res.status(404).json({ success: false, message: 'Incident not found.' });
+    if (!['Resolved', 'Closed'].includes(incident.status)) {
+      return res.status(409).json({ success: false, message: 'The case must be resolved or closed before its report can be exported.' });
+    }
 
     const logs = await ChainOfCustodyLog.find({ incidentId: incident._id })
       .populate('performedBy', 'name email role')
@@ -144,4 +148,33 @@ export const exportDossier = async (req, res) => {
   }
 };
 
-export default { createPublicIncident, getIncidentByTrackingId, getIncidents, getIncidentById, updateStatus, addNote, exportDossier };
+export const getAuditLog = async (req, res) => {
+  const logs = await ChainOfCustodyLog.find()
+    .populate('performedBy', 'name role')
+    .populate('incidentId', 'trackingId title')
+    .sort({ timestamp: -1 })
+    .lean();
+
+  const entries = logs.map((log) => ({
+    id: log._id,
+    action: log.action,
+    actor: log.performedBy?.name ?? 'PUBLIC_ANONYMOUS',
+    role: log.performedBy?.role === 'ADMIN' ? 'Admin' : log.performedBy?.role === 'INVESTIGATOR' ? 'Investigator' : 'Client',
+    ip: log.ipAddress ?? '—',
+    details: log.details,
+    timestamp: log.timestamp,
+    incidentId: log.incidentId?.trackingId ?? null,
+    incidentTitle: log.incidentId?.title ?? null,
+    calculatedHash: log.calculatedHash ?? null,
+  }));
+
+  const incidentOptions = [...new Map(
+    logs
+      .filter((l) => l.incidentId)
+      .map((l) => [String(l.incidentId._id), { id: l.incidentId.trackingId, name: l.incidentId.trackingId }])
+  ).values()];
+
+  return res.status(200).json({ success: true, entries, incidentOptions });
+};
+
+export default { createPublicIncident, getIncidentByTrackingId, getIncidents, getIncidentById, updateStatus, addNote, exportDossier, getAuditLog };

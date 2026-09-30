@@ -1,0 +1,120 @@
+.calendar-picker {
+	width: 280px;
+	box-sizing: border-box;
+	padding: 8px 9px 0;
+	border: 1px solid #4a789f;
+	background: #1d1e20;
+	color: #d8d9dc;
+	font-family: Arial, sans-serif;
+	font-size: 11px;
+    border-radius: 10px;
+}
+
+.calendar-header {
+	display: grid;
+	grid-template-columns: 18px 18px 1fr 18px 18px;
+	align-items: center;
+	min-height: 25px;
+	border-bottom: 1px solid #3e4144;
+	color: #aeb0b5;
+	text-align: center;
+}
+
+.calendar-header strong {
+	color: #b8b9bd;
+	font-size: 11px;
+	font-weight: 400;
+}
+
+.calendar-arrow {
+	display: grid;
+	place-items: center;
+	width: 18px;
+	height: 20px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: #9fa3a8;
+	cursor: pointer;
+}
+
+.calendar-arrow:hover,
+.calendar-arrow:focus-visible {
+	color: #f0f1f2;
+	outline: none;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-weekdays {
+	padding: 10px 0 5px;
+	color: #d1d2d5;
+	font-size: 10px;
+	text-align: center;
+}
+
+.calendar-grid {
+	row-gap: 2px;
+	padding-bottom: 8px;
+}
+
+.calendar-day {
+	justify-self: center;
+	width: 27px;
+	height: 23px;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: 0;
+	background: transparent;
+	color: #d5d6d9;
+	cursor: pointer;
+	font: inherit;
+	line-height: 21px;
+	text-align: center;
+}
+
+.calendar-day:hover,
+.calendar-day:focus-visible {
+	border-color: #6e8fab;
+    border-radius: 4px;
+	outline: none;
+}
+
+.calendar-day.is-adjacent {
+	color: #777b80;
+}
+
+.calendar-day.is-today {
+	border: 0;
+	color: #F04875;
+}
+
+.calendar-day.is-selected {
+	background: #5c83a8;
+	color: #f5f7f9;
+    border-radius: 4px;
+}
+
+.calendar-today-button {
+	width: calc(100% + 18px);
+	min-height: 29px;
+	margin: 0 -9px;
+	padding: 0;
+	border: 0;
+	border-top: 1px solid #3e4144;
+	background: transparent;
+	color: #8da9c0;
+	cursor: pointer;
+	font: inherit;
+}
+
+.calendar-today-button:hover,
+.calendar-today-button:focus-visible {
+	background: #25282b;
+	color: #c8d9e9;
+	outline: none;
+}

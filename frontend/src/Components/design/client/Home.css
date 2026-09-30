@@ -1,0 +1,348 @@
+.client-home {
+    background:
+        radial-gradient(
+            1000px 650px at 50% 250px,
+            #2d4470 0%,
+            #151b2e 60%,
+            rgba(18, 18, 18, 0) 100%  
+        ) no-repeat,
+        var(--portal-bg);
+    position: relative;
+    z-index: 1;
+    display: flex;         
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 10px 20px 100px;
+    overflow: hidden;
+}
+
+.webkitscrollbar {
+    display: none;
+}
+
+.phead {
+    max-width: 964px;
+    font-size: 15px;
+    text-align: center;
+}
+
+.home-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    max-width: 100%;
+    margin-bottom: 40px;
+}
+
+.home-header h1 {
+    font-family: Calibri, sans-serif;
+    font-weight: 400;
+    font-size: 60px;
+    text-align: center;
+    line-height: 1.1;
+    color: #ffffff;
+    margin: 0;
+}
+
+.client-action-section {
+    display: flex;
+    justify-content: center;     
+    align-items: stretch;
+    width: 100%;
+    max-width: 1030px;
+    box-sizing: border-box;
+    padding: 10px 0;
+    gap: 45px;                   
+}
+
+
+.File-appeal-container,
+.Track-appeal-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1 1 0;                
+    max-width: 450px;
+    min-height: 300px;
+    box-sizing: border-box;
+    gap: 16px;
+    padding: 30px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+
+.File-appeal-image,
+.Track-appeal-image {
+    display: block;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
+.File-appeal-container h2,
+.Track-appeal-container h2 {
+    margin: 0;
+    color: #ffffff;
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.File-appeal-container p,
+.Track-appeal-container p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.File-appeal-button,
+.Track-appeal-button {
+    align-self: center;
+    width: 100%;
+    max-width: 240px;
+    min-height: 40px;
+    margin-top: auto;            
+    padding: 8px 24px;
+    border: 0;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(110, 162, 255, 0.32), rgba(47, 72, 118, 0.54));
+    color: #ffffff;
+    cursor: pointer;
+    font-family: Anuphan;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.File-appeal-button:hover,
+.Track-appeal-button:hover {
+    background: rgba(33, 53, 83, 0.908);
+}
+
+.client-warning-section {
+    width: 100%;
+    max-width: 1160px;
+    box-sizing: border-box;
+    padding: 30px 0;
+}
+
+
+.client-warning-container {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 30px 40px 40px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+}
+
+.client-warning-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.client-warning-title h2 {
+    margin: 0;
+    color: #ffffff;
+    font-family: var(--font-display);
+    font-size: 23px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.client-warning-container p {
+    margin: 6px 0 0;
+    padding-left: 44px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: #ffffff;
+}
+
+.client-warning-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 20px;
+}
+
+.client-warning-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;        
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  min-height: 160px;
+  padding: 24px 28px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .12) 0%, rgba(255, 255, 255, .03) 100%);
+  border: 1px solid rgba(255, 255, 255, .15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+}
+
+
+.client-warning-info-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.client-warning-info-image {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.client-warning-info-image--large {
+  width: 36px;
+  height: 36px;
+}
+.client-warning-info-title h3 {
+  margin: 0;
+  font-family: antonio, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #fff;
+}
+.client-warning-info p {
+  margin: 0;
+  font-family: calibri, sans-serif;
+  font-size: 15px;
+  color: rgba(255, 255, 255, .85);
+  text-align: left;
+  font-weight: 400;
+  left: 10px;
+}
+
+.faq {
+    width: 100%;
+    max-width: 1100px;
+    padding: 40px 48px 56px;
+    border-radius: 12px;
+}
+
+.faq-head { text-align: center; }
+.faq-head .kicker {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: #3b82f6;
+}
+.faq-head h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #fff;
+}
+.faq-head p:not(.kicker) {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, .75);
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 780px;
+  margin: 28px auto 0;
+}
+
+
+.faq-list details {
+  background: #25235a;                     
+  border: 1px solid #3d3a8c;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+
+.faq-list summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  cursor: pointer;
+  list-style: none;                        
+}
+.faq-list summary::-webkit-details-marker { display: none; }   
+.faq-list summary:focus-visible { outline: 2px solid #8fabd4; outline-offset: -2px; }
+
+.faq-list summary span {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: #fff;
+}
+.faq-list .q    { width: 20px; height: 20px; flex-shrink: 0; object-fit: contain; }
+.faq-list .chev { width: 16px; height: 16px; flex-shrink: 0; object-fit: contain; transition: transform .2s ease; }
+
+.faq-list details[open] .chev { transform: rotate(180deg); }
+
+.faq-list .answer {
+  padding: 0 20px 16px;
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, .8);
+}
+.faq-list .answer hr {
+  margin: 0 0 10px;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+@media (max-width: 860px) {
+  .faq { padding: 28px 16px 40px; }
+  .faq-head h2 { font-size: 24px; }
+  .faq-list summary { padding: 12px 14px; }
+  .faq-list .answer { padding: 0 14px 14px; }
+}
+
+@media (max-width: 860px) {
+    .client-action-section {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .File-appeal-container,
+    .Track-appeal-container {
+        width: 100%;
+        max-width: 430px;
+    }
+
+    .client-warning-section {
+        padding: 20px 0;
+    }
+
+    .client-warning-container {
+        padding: 24px;
+    }
+}
