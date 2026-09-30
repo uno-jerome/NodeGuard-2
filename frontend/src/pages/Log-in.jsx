@@ -16,7 +16,9 @@ export default function Login() {
     event.preventDefault();
     setError("");
 
-    const result = await login(email, password);
+    const identifier = email.trim();
+    const loginEmail = identifier.includes("@") ? identifier : `${identifier}@nodeguard.local`;
+    const result = await login(loginEmail, password);
     if (!result.success) {
       setError(result.message);
       return;
@@ -50,12 +52,14 @@ export default function Login() {
 
         <form id="login-form" onSubmit={handleLogin}>
           <div className="field">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">Username or Email</label>
             <input
               className="input-field"
-              type="email"
+              type="text"
               id="email"
               name="email"
+              placeholder="Enter username or email"
+              autoComplete="username"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
@@ -70,6 +74,7 @@ export default function Login() {
                 type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
+                placeholder="Enter password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required

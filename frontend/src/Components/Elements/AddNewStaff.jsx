@@ -7,9 +7,9 @@ export const PROVISION_STAFF_HEADER = {
 };
 
 export const PROVISION_STAFF_FIELDS = [
-	{ name: 'name', label: 'Profile Name', type: 'text', required: true },
-	{ name: 'username', label: 'Username', type: 'text', required: true },
-	{ name: 'password', label: 'Generate Password', type: 'password', required: true },
+	{ name: 'name', label: 'Profile Name', type: 'text', placeholder: 'Enter full name', required: true },
+	{ name: 'username', label: 'Username', type: 'text', placeholder: 'Enter username', required: true },
+	{ name: 'password', label: 'Generate Password', type: 'password', placeholder: 'Enter password', required: true },
 ];
 
 const DEFAULT_ROLE = 'Investigator';
@@ -74,6 +74,7 @@ export function ProvisionStaffModal({ isOpen, onSave, onClose, serverError }) {
 										id={f.name}
 										type={f.type}
 										value={values[f.name]}
+										placeholder={f.placeholder}
 										onChange={(e) => setField(f.name, e.target.value)}
 										required={f.required}
 										pattern="[A-Za-z0-9._-]+"
@@ -89,6 +90,7 @@ export function ProvisionStaffModal({ isOpen, onSave, onClose, serverError }) {
 									id={f.name}
 									type={f.type}
 									value={values[f.name]}
+									placeholder={f.placeholder}
 									onChange={(e) => setField(f.name, e.target.value)}
 									required={f.required}
 								/>

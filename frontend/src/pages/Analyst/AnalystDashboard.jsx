@@ -91,7 +91,7 @@ export default function AnalystDashboard({ showHeader = true, showInspect = true
 										</label>
 										<label className="filter-field">Priority:
 											<select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)} aria-label="Filter by priority">
-												<option value="">All Priorities</option><option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+												<option value="">All Priorities</option><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option>
 											</select>
 										</label>
 										<span className="case-count">Showing {displayedIncidents.length} of {incidents.length} submitted cases</span>
