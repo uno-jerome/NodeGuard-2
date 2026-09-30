@@ -171,6 +171,7 @@ export default function IncidentReport() {
             <input
               type="text"
               name="title"
+              placeholder="Enter incident title"
               data-required-field="incidentTitle"
               required
               className={`text-input${invalidFields.includes("incidentTitle") ? " input-invalid" : ""}`}
@@ -358,6 +359,7 @@ export default function IncidentReport() {
             <input
               type="text"
               name="suspectIdentifiers"
+              placeholder="Enter email, phone number, username, or other identifier"
               data-required-field="suspectIdentifiers"
               required
               className={`text-input${invalidFields.includes("suspectIdentifiers") ? " input-invalid" : ""}`}
@@ -372,6 +374,7 @@ export default function IncidentReport() {
             <textarea
               rows="7"
               name="narrative"
+              placeholder="Describe what happened in chronological order"
               data-required-field="incidentSummary"
               required
               className={`textarea-input${invalidFields.includes("incidentSummary") ? " input-invalid" : ""}`}
@@ -390,12 +393,12 @@ export default function IncidentReport() {
             <div className="two-col complaint-grid">
               <label className="field">
                 <span className="field-label">Your Name</span>
-                <input type="text" name="complainantName" placeholder="Leave Blank for Anonymous" className="text-input" />
+                <input type="text" name="complainantName" placeholder="Enter your name (optional)" className="text-input" />
               </label>
 
               <label className="field">
                 <span className="field-label">Contact Number or Email</span>
-                <input type="text" name="complainantContact" className="text-input" />
+                <input type="text" name="complainantContact" placeholder="Enter phone number or email (optional)" className="text-input" />
               </label>
             </div>
           </div>
