@@ -55,7 +55,8 @@ export default function AnalystDashboard({ showHeader = true, showInspect = true
 		setAssignmentError("");
 		setAssignmentMessage("");
 		try {
-			await axiosClient.patch(`/incidents/${assignmentIncident._id}/assign`, { analystId });
+			const response = await axiosClient.patch(`/incidents/${assignmentIncident._id}/assign`, { analystId });
+			setAssignmentIncident(response.data.incident);
 			setAssignmentMessage("Case assigned successfully.");
 			await Promise.all([loadIncidents(), loadAnalysts()]);
 		} catch (requestError) {
