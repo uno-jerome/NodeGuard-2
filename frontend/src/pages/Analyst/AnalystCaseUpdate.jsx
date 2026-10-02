@@ -1,5 +1,5 @@
 import AnalystHeader from "../../Components/navbar/AnalystHeader";
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, Eye, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, Eye, Loader2, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -76,7 +76,9 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
   const [isExportingReport, setIsExportingReport] = useState(false);
   const [reportExportError, setReportExportError] = useState("");
   const [evidencePreview, setEvidencePreview] = useState(null);
-  const [isVerifyingEvidence, setIsVerifyingEvidence] = useState(false);
+  const [previewCache, setPreviewCache] = useState({});
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [evidenceVerification, setEvidenceVerification] = useState({});
   const [evidenceVerificationResults, setEvidenceVerificationResults] = useState({});
   const [copiedHash, setCopiedHash] = useState("");
@@ -84,8 +86,41 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
   const [downloadingFileId, setDownloadingFileId] = useState("");
   const [evidenceActionError, setEvidenceActionError] = useState("");
   const noteInputRef = useRef(null);
+  const previewCacheRef = useRef({});
+  const incidentAbortRef = useRef(null);
+  const previewAbortRef = useRef(null);
+  const verifyAbortRef = useRef(null);
+  const downloadAbortRef = useRef(null);
+  const exportAbortRef = useRef(null);
+  const loadedTrackingIdRef = useRef("");
 
-  const loadIncident = useCallback(async (trackingIdValue) => {
+  const isProcessing = isVerifying || isLoadingPreview || Boolean(downloadingFileId);
+
+  useEffect(() => {
+    previewCacheRef.current = previewCache;
+  }, [previewCache]);
+
+  useEffect(() => {
+    return () => {
+      if (incidentAbortRef.current) incidentAbortRef.current.abort();
+      if (previewAbortRef.current) previewAbortRef.current.abort();
+      if (verifyAbortRef.current) verifyAbortRef.current.abort();
+      if (downloadAbortRef.current) downloadAbortRef.current.abort();
+      if (exportAbortRef.current) exportAbortRef.current.abort();
+
+      Object.values(previewCacheRef.current).forEach((cached) => {
+        if (cached?.url) {
+          try {
+            URL.revokeObjectURL(cached.url);
+          } catch {
+            // Ignore revoke errors
+          }
+        }
+      });
+    };
+  }, []);
+
+  const loadIncident = useCallback(async (trackingIdValue, signal) => {
     const normalized = normalizeTrackingId(trackingIdValue);
     if (!normalized) {
       setIncident(null);
@@ -98,7 +133,10 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
     setError("");
 
     try {
-      const response = await axiosClient.get("/incidents", { params: { limit: 200 } });
+      const response = await axiosClient.get("/incidents", {
+        params: { limit: 200 },
+        signal,
+      });
       const matches = response.data.incidents || [];
       const found = matches.find((item) => normalizeTrackingId(item.trackingId) === normalized);
 
@@ -106,7 +144,7 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
         throw new Error("No incident matches that case ID.");
       }
 
-      const detailsResponse = await axiosClient.get(`/incidents/${found._id}`);
+      const detailsResponse = await axiosClient.get(`/incidents/${found._id}`, { signal });
       const caseDetails = detailsResponse.data.incident;
       setIncident(caseDetails);
       setCustodyLogs(Array.isArray(detailsResponse.data.custodyLogs) ? detailsResponse.data.custodyLogs : []);
@@ -116,25 +154,46 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
       ));
       setEvidenceVerificationResults({});
       setCaseId(found.trackingId);
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.set("trackingId", caseDetails.trackingId);
-      setSearchParams(nextParams, { replace: true });
+      loadedTrackingIdRef.current = found.trackingId;
+
+      setSearchParams((prevParams) => {
+        if (prevParams.get("trackingId") === caseDetails.trackingId) {
+          return prevParams;
+        }
+        const next = new URLSearchParams(prevParams);
+        next.set("trackingId", caseDetails.trackingId);
+        return next;
+      }, { replace: true });
     } catch (requestError) {
+      if (signal?.aborted) return;
       setIncident(null);
       setCustodyLogs([]);
       setError(requestError.response?.data?.message || requestError.message || "Unable to load this case.");
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) {
+        setIsLoading(false);
+      }
     }
-  }, [searchParams, setSearchParams]);
+  }, [setSearchParams]);
 
   useEffect(() => {
     const trackingIdFromUrl = searchParams.get("trackingId");
-    if (trackingIdFromUrl) {
+    if (trackingIdFromUrl && trackingIdFromUrl !== loadedTrackingIdRef.current) {
       setCaseId(trackingIdFromUrl);
-      loadIncident(trackingIdFromUrl);
+
+      if (incidentAbortRef.current) {
+        incidentAbortRef.current.abort();
+      }
+      const controller = new AbortController();
+      incidentAbortRef.current = controller;
+
+      loadIncident(trackingIdFromUrl, controller.signal);
+
+      return () => {
+        controller.abort();
+      };
     }
-  }, [loadIncident, searchParams]);
+  }, [searchParams, loadIncident]);
 
   const statusTone = useMemo(() => {
     if (!incident) return "review";
@@ -153,7 +212,17 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    loadIncident(caseId);
+    if (isLoading) return;
+    const normalized = normalizeTrackingId(caseId);
+    if (!normalized) return;
+
+    if (incidentAbortRef.current) {
+      incidentAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    incidentAbortRef.current = controller;
+
+    loadIncident(normalized, controller.signal);
   };
 
   const updateCaseStatus = async (status) => {
@@ -184,39 +253,67 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
     noteInputRef.current.style.height = `${Math.max(noteInputRef.current.scrollHeight, 88)}px`;
   }, [noteDraft]);
 
-  useEffect(() => () => {
-    if (evidencePreview?.url) URL.revokeObjectURL(evidencePreview.url);
-  }, [evidencePreview]);
-
   const previewEvidenceFile = async (file) => {
-    if (!file._id || previewingFileId) return;
+    if (!file?._id || isProcessing) return;
 
+    const cached = previewCache[file._id];
+    if (cached) {
+      setEvidencePreview(cached);
+      return;
+    }
+
+    setIsLoadingPreview(true);
     setPreviewingFileId(file._id);
     setEvidenceActionError("");
+
+    if (previewAbortRef.current) {
+      previewAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    previewAbortRef.current = controller;
+
     try {
       const response = await axiosClient.get(`/evidence/${file._id}/download`, {
         params: { disposition: "inline" },
         responseType: "blob",
+        signal: controller.signal,
       });
       const kind = getEvidencePreviewKind(file);
       const preview = kind === "text"
         ? { file, kind, text: await response.data.text() }
         : { file, kind, url: URL.createObjectURL(response.data) };
+
+      setPreviewCache((prev) => ({ ...prev, [file._id]: preview }));
       setEvidencePreview(preview);
     } catch {
+      if (controller.signal.aborted) return;
       setEvidenceActionError(`Unable to preview ${file.originalFilename || "this file"}. Please try again.`);
     } finally {
+      if (previewAbortRef.current === controller) {
+        previewAbortRef.current = null;
+      }
+      setIsLoadingPreview(false);
       setPreviewingFileId("");
     }
   };
 
   const downloadEvidenceFile = async (file) => {
-    if (!file._id || downloadingFileId) return;
+    if (!file?._id || isProcessing) return;
 
     setDownloadingFileId(file._id);
     setEvidenceActionError("");
+
+    if (downloadAbortRef.current) {
+      downloadAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    downloadAbortRef.current = controller;
+
     try {
-      const response = await axiosClient.get(`/evidence/${file._id}/download`, { responseType: "blob" });
+      const response = await axiosClient.get(`/evidence/${file._id}/download`, {
+        responseType: "blob",
+        signal: controller.signal,
+      });
       const downloadUrl = URL.createObjectURL(response.data);
       const link = document.createElement("a");
       link.href = downloadUrl;
@@ -226,8 +323,12 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
     } catch {
+      if (controller.signal.aborted) return;
       setEvidenceActionError(`Unable to download ${file.originalFilename || "this file"}. Please try again.`);
     } finally {
+      if (downloadAbortRef.current === controller) {
+        downloadAbortRef.current = null;
+      }
       setDownloadingFileId("");
     }
   };
@@ -236,9 +337,9 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
 
   const verifyEvidenceFiles = async () => {
     const files = incident?.evidenceFiles || [];
-    if (!files.length || isVerifyingEvidence) return;
+    if (!files.length || isProcessing) return;
 
-    setIsVerifyingEvidence(true);
+    setIsVerifying(true);
     setEvidenceActionError("");
     setEvidenceVerification((current) => ({
       ...current,
@@ -246,40 +347,52 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
     }));
     setEvidenceVerificationResults({});
 
-    const results = await Promise.all(files.map(async (file) => {
-      if (!file._id) return [file._id, { verificationStatus: "error", errorMessage: "Evidence record ID is missing." }];
-      try {
-        const response = await axiosClient.post(`/evidence/${file._id}/verify`);
-        const verificationStatus = response.data.verificationStatus || (response.data.match ? "verified" : "mismatch");
-        return [file._id, { ...response.data, verificationStatus }];
-      } catch (requestError) {
-        return [file._id, {
-          verificationStatus: "error",
-          errorMessage: requestError.response?.data?.message || "Unable to verify this evidence file.",
-        }];
-      }
-    }));
+    if (verifyAbortRef.current) {
+      verifyAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    verifyAbortRef.current = controller;
 
-    const verificationResults = Object.fromEntries(results);
-    const savedVerificationMap = Object.fromEntries(results.map(([id, result]) => [id, result.verificationStatus]));
-    setEvidenceVerificationResults(verificationResults);
-    setEvidenceVerification((current) => ({ ...current, ...savedVerificationMap }));
-    setIncident((currentIncident) => {
-      if (!currentIncident) return currentIncident;
-      return {
-        ...currentIncident,
-        evidenceFiles: (currentIncident.evidenceFiles || []).map((file) => {
-          const updatedStatus = savedVerificationMap[file._id];
-          if (!updatedStatus) return file;
-          return {
-            ...file,
-            verificationStatus: updatedStatus,
-            verifiedAt: verificationResults[file._id]?.verifiedAt || new Date().toISOString(),
-          };
+    try {
+      const results = await Promise.all(files.map(async (file) => {
+        if (!file._id) return [file._id, { verificationStatus: "error", errorMessage: "Evidence record ID is missing." }];
+        try {
+          const response = await axiosClient.post(`/evidence/${file._id}/verify`, null, {
+            signal: controller.signal,
+          });
+          const verificationStatus = response.data.verificationStatus || (response.data.match ? "verified" : "mismatch");
+          return [file._id, { ...response.data, verificationStatus }];
+        } catch (requestError) {
+          if (controller.signal.aborted) throw requestError;
+          return [file._id, {
+            verificationStatus: "error",
+            errorMessage: requestError.response?.data?.message || "Unable to verify this evidence file.",
+          }];
+        }
+      }));
+
+      const verificationResults = Object.fromEntries(results);
+      setEvidenceVerificationResults(verificationResults);
+      setEvidenceVerification((prev) => {
+        const next = { ...prev };
+        for (const [id, r] of results) next[id] = r.verificationStatus;
+        return next;
+      });
+      setIncident((prev) => prev && {
+        ...prev,
+        evidenceFiles: prev.evidenceFiles?.map((file) => {
+          const res = verificationResults[file._id];
+          return res ? { ...file, verificationStatus: res.verificationStatus, verifiedAt: res.verifiedAt || new Date().toISOString() } : file;
         }),
-      };
-    });
-    setIsVerifyingEvidence(false);
+      });
+    } catch {
+      if (!controller.signal.aborted) {
+        setEvidenceActionError("Verification encountered an error. Please try again.");
+      }
+    } finally {
+      if (verifyAbortRef.current === controller) verifyAbortRef.current = null;
+      setIsVerifying(false);
+    }
   };
 
   const copyEvidenceHash = async (hash) => {
@@ -320,8 +433,18 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
 
     setIsExportingReport(true);
     setReportExportError("");
+
+    if (exportAbortRef.current) {
+      exportAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    exportAbortRef.current = controller;
+
     try {
-      const response = await axiosClient.get(`/incidents/${incident._id}/dossier`, { responseType: "blob" });
+      const response = await axiosClient.get(`/incidents/${incident._id}/dossier`, {
+        responseType: "blob",
+        signal: controller.signal,
+      });
       const downloadUrl = URL.createObjectURL(response.data);
       const link = document.createElement("a");
       link.href = downloadUrl;
@@ -331,8 +454,12 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
     } catch {
+      if (controller.signal.aborted) return;
       setReportExportError("Unable to export this report. Please try again.");
     } finally {
+      if (exportAbortRef.current === controller) {
+        exportAbortRef.current = null;
+      }
       setIsExportingReport(false);
     }
   };
@@ -436,10 +563,20 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
                           type="button"
                           className="verify-evidence-button"
                           onClick={verifyEvidenceFiles}
-                          disabled={!incident.evidenceFiles?.length || isVerifyingEvidence}
+                          disabled={!incident.evidenceFiles?.length || isProcessing}
+                          aria-busy={isVerifying}
                         >
-                          <ShieldCheck size={13} aria-hidden="true" />
-                          {isVerifyingEvidence ? "Verifying..." : "Verify Evidence Integrity"}
+                          {isVerifying ? (
+                            <>
+                              <Loader2 size={13} className="verify-spinner" aria-hidden="true" />
+                              <span>Verifying...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck size={13} aria-hidden="true" />
+                              <span>Verify Evidence Integrity</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -477,20 +614,28 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
                               <button
                                 type="button"
                                 onClick={() => previewEvidenceFile(file)}
-                                disabled={getEvidencePreviewKind(file) === "unsupported" || Boolean(previewingFileId)}
+                                disabled={getEvidencePreviewKind(file) === "unsupported" || isProcessing}
                                 aria-label={`Preview ${file.originalFilename || "evidence file"}`}
                                 title={getEvidencePreviewKind(file) === "unsupported" ? "Preview not available for this file type" : "Preview file"}
                               >
-                                <Eye size={16} aria-hidden="true" />
+                                {isLoadingPreview && previewingFileId === file._id ? (
+                                  <Loader2 size={16} className="verify-spinner" aria-hidden="true" />
+                                ) : (
+                                  <Eye size={16} aria-hidden="true" />
+                                )}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => downloadEvidenceFile(file)}
-                                disabled={Boolean(downloadingFileId)}
+                                disabled={isProcessing}
                                 aria-label={`Download ${file.originalFilename || "evidence file"}`}
                                 title="Download file"
                               >
-                                <Download size={16} aria-hidden="true" />
+                                {downloadingFileId === file._id ? (
+                                  <Loader2 size={16} className="verify-spinner" aria-hidden="true" />
+                                ) : (
+                                  <Download size={16} aria-hidden="true" />
+                                )}
                               </button>
                             </span>
                             <div className="evidence-integrity-details">

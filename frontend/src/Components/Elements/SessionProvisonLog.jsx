@@ -2,23 +2,19 @@ import { useState } from 'react';
 import '../design/Admin/SessionProvisionLog.css';
 import provisionLogo from '../../public/log_logo.svg';
 
-const bookmark = provisionLogo;
+const nameOf = (e) => e?.name?.trim() || e?.email?.split('@')[0] || '';
 
-const nameOf = ({ name, email }) => name?.trim() || email.split('@')[0];
-
-
-export function SessionProvisioningLog({ entries, onRemove, removingStaffId = "" }) {
+export function SessionProvisioningLog({ entries, onRemove, removingStaffId = '' }) {
   const [selected, setSelected] = useState(null);
-  const toggle = (id) => setSelected((cur) => (cur === id ? null : id));
- 
+
   return (
     <section className="spl">
       <header>
-        <img src={bookmark} alt="" />
+        <img src={provisionLogo} alt="" />
         <h2>Session Provisioning Log</h2>
         <span>{entries.length} added</span>
       </header>
- 
+
       {entries.length === 0 ? (
         <p className="empty">No staff added yet</p>
       ) : (
@@ -28,10 +24,9 @@ export function SessionProvisioningLog({ entries, onRemove, removingStaffId = ""
               key={e.id}
               className={e.id === selected ? 'on' : ''}
               tabIndex={0}
-              onClick={() => toggle(e.id)}
+              onClick={() => setSelected((cur) => (cur === e.id ? null : e.id))}
               onKeyDown={(ev) => {
-                if (ev.target !== ev.currentTarget) return;
-                if (ev.key === 'Enter') toggle(e.id);
+                if (ev.key === 'Enter') setSelected((cur) => (cur === e.id ? null : e.id));
                 if (ev.key === 'Escape') setSelected(null);
               }}
             >
@@ -66,7 +61,7 @@ export function SessionProvisioningLog({ entries, onRemove, removingStaffId = ""
     </section>
   );
 }
- 
+
 export function StaffToast({ toast, onClose }) {
   return (
     <div className={`spl-toast ${toast ? 'show' : ''} ${toast?.type ?? ''}`} onClick={onClose} role="status">

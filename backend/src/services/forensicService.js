@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs';
 
-export const computeFileHashes = (filePath) => {
+export const computeFileHashes = (filePath, options = {}) => {
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(filePath)) {
       return reject(new Error(`File not found at path: ${filePath}`));
@@ -9,7 +9,8 @@ export const computeFileHashes = (filePath) => {
 
     const sha256Hash = crypto.createHash('sha256');
     const md5Hash = crypto.createHash('md5');
-    const stream = fs.createReadStream(filePath);
+    const highWaterMark = options?.highWaterMark || 64 * 1024;
+    const stream = fs.createReadStream(filePath, { highWaterMark });
 
     stream.on('data', (chunk) => {
       sha256Hash.update(chunk);

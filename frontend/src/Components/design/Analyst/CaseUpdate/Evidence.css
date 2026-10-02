@@ -47,6 +47,19 @@
   opacity: 0.55;
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.verify-spinner {
+  animation: spin 1s linear infinite;
+}
+
 .evidence-file-list {
   display: grid;
   gap: 8px;

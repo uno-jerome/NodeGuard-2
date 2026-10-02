@@ -1,8 +1,13 @@
+import crypto from 'node:crypto';
 import Incident from '../models/Incident.js';
+import EvidenceFile from '../models/EvidenceFile.js';
 import ChainOfCustodyLog from '../models/ChainOfCustodyLog.js';
-import { registerPublicIncident } from '../services/incidentService.js';
-import { ALLOWED_STATUSES, buildIncidentFilter } from '../utils/incidentHelpers.js';
+import { computeFileHashes } from '../services/forensicService.js';
 import { generateDossierPDF } from '../utils/pdfGenerator.js';
+
+const ALLOWED_STATUSES = ['Reported', 'Under Review', 'Investigating', 'Resolved', 'Closed'];
+
+const generateTrackingId = () => `CASE-${new Date().getFullYear()}-${crypto.randomBytes(3).toString('hex').slice(0, 5).toUpperCase()}`;
 
 export const createPublicIncident = async (req, res) => {
   try {
@@ -10,7 +15,59 @@ export const createPublicIncident = async (req, res) => {
     if (!title || !category || !narrative) {
       return res.status(400).json({ success: false, message: 'Title, category, and narrative are required.' });
     }
-    const { trackingId } = await registerPublicIncident(req.body, req.files, req.ip);
+
+    const trackingId = generateTrackingId();
+    let complainantEmail = req.body.complainantEmail || '';
+    const complainantContact = req.body.complainantContact || '';
+    if (!complainantEmail && complainantContact.includes('@')) {
+      complainantEmail = complainantContact.trim().toLowerCase();
+    }
+
+    const incident = new Incident({
+      trackingId,
+      title,
+      category,
+      categoryDetails: req.body.categoryDetails || '',
+      platform: req.body.platform || 'Web',
+      platformDetails: req.body.platformDetails || '',
+      suspectIdentifiers: req.body.suspectIdentifiers || '',
+      estimatedLoss: req.body.estimatedLoss ? Number(req.body.estimatedLoss) : 0,
+      narrative,
+      incidentDate: req.body.incidentDate || Date.now(),
+      complainantName: req.body.complainantName || 'Anonymous',
+      complainantEmail,
+      complainantContact,
+    });
+
+    const uploads = Array.isArray(req.files) ? req.files : req.files ? [req.files] : [];
+    const evidenceRecords = await Promise.all(uploads.map(async (file) => {
+      const hashes = await computeFileHashes(file.path);
+      const evidenceFile = await EvidenceFile.create({
+        incidentId: incident._id,
+        originalFilename: file.originalname,
+        storedFilename: file.filename,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        sha256Hash: hashes.sha256,
+        md5Hash: hashes.md5,
+      });
+      incident.evidenceFiles.push(evidenceFile._id);
+      return { file, evidenceFile, hashes };
+    }));
+
+    await incident.save();
+
+    const custodyRecords = evidenceRecords.length ? evidenceRecords : [null];
+    await Promise.all(custodyRecords.map((r) => ChainOfCustodyLog.create({
+      incidentId: incident._id,
+      evidenceFileId: r?.evidenceFile._id || null,
+      performedBy: null,
+      action: 'INGESTION',
+      details: r ? `Public incident created with initial evidence: ${r.file.originalname}` : 'Public incident created without initial evidence file',
+      calculatedHash: r?.hashes.sha256 || null,
+      ipAddress: req.ip || '127.0.0.1',
+    })));
+
     return res.status(201).json({ success: true, trackingId });
   } catch (error) {
     return res.status(500).json({ success: false, message: `Failed to create incident: ${error.message}` });
@@ -31,8 +88,12 @@ export const getIncidentByTrackingId = async (req, res) => {
 
 export const getIncidents = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
-    const filter = buildIncidentFilter(req.query);
+    const { page = 1, limit = 10, category, status, priority } = req.query;
+    const filter = {};
+    if (category) filter.category = category;
+    if (status) filter.status = status;
+    if (priority) filter.priority = priority;
+
     const skip = (Number(page) - 1) * Number(limit);
     const [incidents, total] = await Promise.all([
       Incident.find(filter)
@@ -177,4 +238,13 @@ export const getAuditLog = async (req, res) => {
   return res.status(200).json({ success: true, entries, incidentOptions });
 };
 
-export default { createPublicIncident, getIncidentByTrackingId, getIncidents, getIncidentById, updateStatus, addNote, exportDossier, getAuditLog };
+export default {
+  createPublicIncident,
+  getIncidentByTrackingId,
+  getIncidents,
+  getIncidentById,
+  updateStatus,
+  addNote,
+  exportDossier,
+  getAuditLog,
+};

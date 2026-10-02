@@ -52,6 +52,15 @@ app.use(
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+// Keep-alive health check endpoint for external uptime services (e.g. Render spin-up keepalive)
+app.get(['/', '/api/health'], (req, res) => {
+  res.status(200).json({
+    status: 'online',
+    timestamp: new Date().toISOString(),
+    service: 'NodeGuard Digital Forensics API',
+  });
+});
+
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
@@ -59,14 +68,6 @@ const globalLimiter = rateLimit({
   legacyHeaders: false,
 });
 app.use('/api/', globalLimiter);
-
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'online',
-    timestamp: new Date().toISOString(),
-    service: 'NodeGuard Digital Forensics API',
-  });
-});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/incidents', incidentRoutes);
