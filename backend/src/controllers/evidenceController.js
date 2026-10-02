@@ -49,17 +49,19 @@ export const verifyEvidence = async (req, res) => {
     evidence.verificationStatus = verificationStatus;
     evidence.verificationDetails = details;
     evidence.verifiedAt = new Date();
-    await evidence.save();
 
-    await ChainOfCustodyLog.create({
-      incidentId: evidence.incidentId,
-      evidenceFileId: evidence._id,
-      performedBy: req.user?.id || null,
-      action: isMatch ? 'VERIFY_PASS' : 'VERIFY_FAIL',
-      details,
-      calculatedHash: currentHashes.sha256,
-      ipAddress: req.ip || '127.0.0.1',
-    });
+    await Promise.all([
+      evidence.save(),
+      ChainOfCustodyLog.create({
+        incidentId: evidence.incidentId,
+        evidenceFileId: evidence._id,
+        performedBy: req.user?.id || null,
+        action: isMatch ? 'VERIFY_PASS' : 'VERIFY_FAIL',
+        details,
+        calculatedHash: currentHashes.sha256,
+        ipAddress: req.ip || '127.0.0.1',
+      }),
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -88,7 +90,13 @@ export const streamEvidence = async (req, res) => {
       return res.status(404).json({ success: false, message: 'File not found on storage disk.' });
     }
 
-    await ChainOfCustodyLog.create({
+    const disposition = isPreview ? 'inline' : 'attachment';
+    res.setHeader('Content-Disposition', `${disposition}; filename="${encodeURIComponent(evidence.originalFilename)}"`);
+    res.setHeader('Content-Type', evidence.mimeType || 'application/octet-stream');
+    res.setHeader('Content-Length', evidence.fileSize);
+
+    // Record audit custody log asynchronously without blocking file streaming start
+    ChainOfCustodyLog.create({
       incidentId: evidence.incidentId,
       evidenceFileId: evidence._id,
       performedBy: req.user?.id || null,
@@ -98,12 +106,7 @@ export const streamEvidence = async (req, res) => {
         : `Evidence file downloaded: ${evidence.originalFilename}`,
       calculatedHash: evidence.sha256Hash,
       ipAddress: req.ip || '127.0.0.1',
-    });
-
-    const disposition = isPreview ? 'inline' : 'attachment';
-    res.setHeader('Content-Disposition', `${disposition}; filename="${encodeURIComponent(evidence.originalFilename)}"`);
-    res.setHeader('Content-Type', evidence.mimeType || 'application/octet-stream');
-    res.setHeader('Content-Length', evidence.fileSize);
+    }).catch((err) => console.error('[ChainOfCustody Log Error]', err.message));
 
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
