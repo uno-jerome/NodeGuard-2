@@ -15,9 +15,8 @@ const loginLimiter = rateLimit({
 
 router.post('/login', loginLimiter, login);
 router.put('/change-password', verifyToken, changePassword);
-router.post('/change-password', verifyToken, changePassword);
 router.post('/register', verifyToken, register);
-router.get('/users', verifyToken, getUsers);
+router.get('/users', verifyToken, requireRole('ADMIN'), getUsers);
 router.delete('/users/:id', verifyToken, requireRole('ADMIN'), deactivateUser);
 
 export default router;

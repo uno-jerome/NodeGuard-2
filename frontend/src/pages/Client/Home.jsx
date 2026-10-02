@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import "../../Components/design/client/Home.css";
 import ClientHeader from "../../Components/navbar/ClientHeader";
 import incidentReportImage from "../../public/Incidentlogo.svg";
@@ -10,6 +11,7 @@ import CHEVRON_ICON_URL from "../../public/chev.png";
 import QUESTION_ICON_URL from "../../public/question.png";
 
 export default function ClientHome() {
+    const navigate = useNavigate();
     const FAQ_ITEMS = [
   {
     id: 1,
@@ -50,13 +52,13 @@ export default function ClientHome() {
                 <img src={incidentReportImage} alt="File Appeal" className="File-appeal-image" />
                 <h2>File Incident Report</h2>
                 <p> Submit details regarding phishing, scam transfers, identity theft, or extortion. Upload original evidence files for memory-safe SHA-256 fingerprinting.</p>
-                <button className="File-appeal-button" onClick={() => window.location.href = "/client/report"}>File Report</button>
+                <button className="File-appeal-button" onClick={() => navigate('/client/report')}>File Report</button>
             </div>
             <div className="Track-appeal-container">
                 <img src={trackReportImage} alt="Track Appeal" className="Track-appeal-image" />
                 <h2>Track Report Status</h2>
                 <p>Look up an active case using your assigned CASE-YYYY-XXXXX tracking code to review real-time status updates and cryptographic custody verification.</p>
-                <button className="Track-appeal-button" onClick={() => window.location.href = "/client/track"}>Check Status Report</button>
+                <button className="Track-appeal-button" onClick={() => navigate('/client/track')}>Check Status Report</button>
              </div>
             </section>
       

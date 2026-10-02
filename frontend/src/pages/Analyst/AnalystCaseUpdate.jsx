@@ -1,7 +1,8 @@
 import AnalystHeader from "../../Components/navbar/AnalystHeader";
 import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, Eye, Paperclip, Plus, ShieldCheck, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import axiosClient from "../../api/axiosClient";
 import "../../Components/design/Analyst/AnalystCaseUpdate.css";
 
@@ -56,6 +57,8 @@ const getEvidencePreviewKind = (file) => {
 };
 
 export default function AnalystCaseUpdate({ showHeader = true }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [caseId, setCaseId] = useState(searchParams.get("trackingId") || "");
   const [incident, setIncident] = useState(null);
@@ -341,10 +344,10 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
       <main className="analyst-case-update">
         <div className="case-update-shell">
           <div className="case-update-topbar">
-            <a href="/analyst" aria-label="Back to dashboard">
+            <button type="button" onClick={() => navigate(user?.role === 'ADMIN' ? '/admin' : '/analyst')} aria-label="Back to dashboard">
               <ArrowLeft size={14} style={{ marginRight: 6, verticalAlign: "middle" }} />
               Back to Dashboard
-            </a>
+            </button>
           </div>
 
           <form className="case-id-search" onSubmit={handleSubmit}>
@@ -552,7 +555,7 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
                           LEDGER RECORDS: {custodyLogs.length} TOTAL
                         </span>
                         <span className="append-only-pill" aria-label="Ledger is append-only">Append-Only</span>
-                        <button type="button" className="log-action-pill">All Actions ({custodyLogs.length})</button>
+                        <button type="button" className="log-action-pill" onClick={() => { setIsNewestFirst(false); setCustodyLogPage(1); }}>All Actions ({custodyLogs.length})</button>
                         <button
                           type="button"
                           className="log-action-pill log-sort-pill"

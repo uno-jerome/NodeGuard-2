@@ -14,7 +14,7 @@ NodeGuard provides a structured reporting interface for citizens to lodge cyber 
 * **Frontend:** React 18, Vite, Tailwind CSS, Lucide Icons, Axios, React Router
 * **Backend:** Node.js, Express.js (REST API)
 * **Database:** MongoDB via Mongoose ODM
-* **Core Utilities:** Native Node `crypto` streaming, Multer storage, Bcrypt.js, JSON Web Tokens
+* **Core Utilities & Security:** Native Node `crypto` streaming, Multer storage, Bcrypt.js, JSON Web Tokens, Helmet, Express Rate Limit
 
 ## Project Structure
 
@@ -28,16 +28,17 @@ nodeguard/
 │   │   ├── middleware/      # JWT auth, role validation, Multer upload
 │   │   ├── models/          # User, Incident, EvidenceFile, ChainOfCustodyLog
 │   │   ├── routes/          # Express API route declarations
-│   │   └── services/        # Forensic crypto hashing stream service
+│   │   ├── services/        # Forensic crypto hashing stream service
+│   │   └── utils/           # Incident helpers and tracking ID generator
 │   ├── uploads/             # Runtime evidence vault (git-ignored)
 │   ├── seed.js              # Developer seed script - demo cases & sample files
 │   └── server.js            # Express server entry point
 ├── frontend/
 │   ├── src/
 │   │   ├── api/             # Axios client instance with interceptors
-│   │   ├── components/      # Modular UI components (common, report, track, case)
+│   │   ├── Components/      # UI components (navbar, elements, design, calendar)
 │   │   ├── context/         # AuthContext state provider
-│   │   ├── pages/           # PublicReport, TrackCase, Dashboard, CaseDetails, Login
+│   │   ├── pages/           # Portals: Admin/, Analyst/, Client/, and Log-in.jsx
 │   │   ├── App.jsx          # Route configurations
 │   │   └── main.jsx         # React application bootstrap
 │   └── index.html
@@ -50,7 +51,7 @@ nodeguard/
 
 * **Node.js**: v18.x or higher
 * **npm**: v9.x or higher
-* **MongoDB**: Community Edition v6.0+ or MongoDB in Docker
+* **MongoDB**: Community Edition v6.0+ (Windows: `winget install MongoDB.Server` or MSI installer), Docker, or MongoDB Atlas
 * **Git**
 
 ---
@@ -64,20 +65,33 @@ cd NodeGuard
 
 ---
 
-### Step 2: Start MongoDB
+### Step 2: Install & Start MongoDB
 
-Ensure your local MongoDB daemon is active before launching the project:
+Ensure MongoDB is installed and active before launching the project:
 
-**Using Linux systemd:**
+**Windows (Auto-install via winget):**
+```powershell
+# 1. Install MongoDB Server (run once in PowerShell / CMD):
+winget install MongoDB.Server
 
+# 2. Start the service (if not already running):
+net start MongoDB
+# (Or run standalone daemon manually: mongod)
+```
+
+**Linux (systemd):**
 ```bash
-# Check status
-sudo systemctl status mongod
-
-# Start MongoDB service
 sudo systemctl start mongod
+```
 
-sudo systemctl enable mongod
+**macOS (Homebrew):**
+```bash
+brew services start mongodb-community
+```
+
+**Docker (any platform):**
+```bash
+docker run -d -p 27017:27017 --name mongodb mongo:latest
 ```
 
 ---
@@ -87,16 +101,19 @@ sudo systemctl enable mongod
 From the **project root**, install all dependencies and fill the database:
 
 ```bash
-# Install all tools
+# 1. Install root runner dependencies (concurrently)
 npm install
 
-# Install backend and frontend dependencies
+# 2. Install backend and frontend dependencies
 npm run install:all
 
-# Configure backend environment variables
+# 3. Configure backend environment variables
+# Windows CMD:
+copy backend\.env.example backend\.env
+# Linux / macOS / PowerShell:
 cp backend/.env.example backend/.env
 
-# Seed database with demo accounts and sample cases
+# 4. Seed database with demo accounts and sample cases
 npm run seed
 ```
 
@@ -110,7 +127,7 @@ npm run seed
 
 #### Option A - Both services at once (recommended)
 
-From the **project root**, start the backend and frontend simultaneously in a single terminal:
+From the **project root**, start backend `:5000` and frontend `:5173` simultaneously in a single terminal:
 
 ```bash
 npm run dev
@@ -119,16 +136,18 @@ npm run dev
 #### Option B - Separate terminals
 
 **Terminal 1 - Backend:**
-
 ```bash
-cd backend && npm run dev    # http://localhost:5000
+cd backend
+npm run dev    # http://localhost:5000
 ```
 
 **Terminal 2 - Frontend:**
-
 ```bash
-cd frontend && npm run dev   # http://localhost:5173
+cd frontend
+npm run dev   # http://localhost:5173
 ```
+
+> **Windows PowerShell Tip:** If script execution is restricted (`npm.ps1 cannot be loaded`), either run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` or invoke commands using `npm.cmd` (e.g., `npm.cmd run dev`).
 
 ---
 
@@ -146,9 +165,12 @@ cd frontend && npm run dev   # http://localhost:5173
 
 | Portal / Resource | URL | Description |
 | :--- | :--- | :--- |
-| **Public Portal** | [http://localhost:5173](http://localhost:5173) | Lodge incident reports & submit evidence files |
-| **Track Incident** | [http://localhost:5173/track](http://localhost:5173/track) | Track status using case ID (e.g. `CASE-2026-00001`) |
+| **Public Portal** | [http://localhost:5173](http://localhost:5173) | Citizen home (redirects to `/client`) |
+| **Report Incident** | [http://localhost:5173/client/report](http://localhost:5173/client/report) | Public incident reporting form & evidence upload |
+| **Track Incident** | [http://localhost:5173/client/track](http://localhost:5173/client/track) | Track status using case ID (e.g. `CASE-2026-00001`) |
 | **Staff Login** | [http://localhost:5173/login](http://localhost:5173/login) | Authenticated console for analysts & admins |
+| **Analyst Portal** | [http://localhost:5173/analyst](http://localhost:5173/analyst) | Case triage, evidence hashing & timeline notes |
+| **Admin Portal** | [http://localhost:5173/admin](http://localhost:5173/admin) | User provisioning, audit ledger & system settings |
 | **Backend API** | [http://localhost:5000](http://localhost:5000) | Express REST API |
 
 ### Default Staff Accounts

@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import "../../Components/design/Admin/AuditLog.css";
 import searchIcon from "../../public/search_icon.svg";
 import { AuditLogInspectorModal } from "../../Components/Elements/auditInspect";
-import { DEFAULT_ENTRIES } from "../../constants/auditLogDefaults";
 import Calendar from "../../Components/calendar/calendar";
 import axiosClient from "../../api/axiosClient";
 
@@ -80,7 +79,7 @@ export default function AuditLog({
     incidentOptions = [],
     onSearch,
     onFiltersChange,
-    entries = DEFAULT_ENTRIES,
+    entries = [],
     children,
 }) {
     const [query, setQuery] = useState('');
@@ -90,6 +89,7 @@ export default function AuditLog({
     const [openDatePicker, setOpenDatePicker] = useState(null);
     const [liveEntries, setLiveEntries] = useState(null);
     const [liveIncidentOptions, setLiveIncidentOptions] = useState(null);
+    const [fetchError, setFetchError] = useState(null);
     const panelRef = useRef(null);
 
     useEffect(() => {
@@ -98,7 +98,10 @@ export default function AuditLog({
                 setLiveEntries(data.entries);
                 setLiveIncidentOptions(data.incidentOptions);
             })
-            .catch(() => {});
+            .catch((err) => {
+                setLiveEntries([]);
+                setFetchError(err?.response?.data?.message || 'Failed to load audit log entries.');
+            });
     }, []);
 
     const resolvedEntries = liveEntries ?? entries;
@@ -272,7 +275,9 @@ export default function AuditLog({
                         )}
 
                         <div className="audit-log-body">
-                            {filteredEntries.length === 0 ? (
+                            {fetchError ? (
+                                <p className="audit-empty">{fetchError}</p>
+                            ) : filteredEntries.length === 0 ? (
                                 <p className="audit-empty">No Chain of Custody records found.</p>
                             ) : (
                                 <>
