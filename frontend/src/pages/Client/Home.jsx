@@ -3,7 +3,7 @@ import "../../Components/design/client/Home.css";
 import ClientHeader from "../../Components/navbar/ClientHeader";
 import incidentReportImage from "../../public/Incidentlogo.svg";
 import trackReportImage from "../../public/Tracklogo.svg";
-import warning1 from "../../public/warning info 1.svg";
+import warning1 from "../../public/Warning info 1.svg";
 import warning2 from "../../public/warning info 2.svg";
 import warning3 from "../../public/warning info 3.svg";
 import warning from "../../public/warning Icon.svg";
