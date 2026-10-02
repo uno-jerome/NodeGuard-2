@@ -1,6 +1,6 @@
 {
-  "name": "nodeguard-frontend",
-  "compatibility_date": "2026-09-01",
+  "name": "nodeguard-2",
+  "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application"
