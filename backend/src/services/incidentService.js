@@ -5,7 +5,14 @@ import { computeFileHashes } from './forensicService.js';
 import { generateTrackingId } from '../utils/trackingIdGenerator.js';
 
 export const registerPublicIncident = async (data, files, ipAddress) => {
-  const trackingId = await generateTrackingId();
+  const trackingId = generateTrackingId();
+
+  let complainantEmail = data.complainantEmail || '';
+  const complainantContact = data.complainantContact || '';
+  if (!complainantEmail && complainantContact.includes('@')) {
+    complainantEmail = complainantContact.trim().toLowerCase();
+  }
+
   const incident = new Incident({
     trackingId,
     title: data.title,
@@ -18,8 +25,8 @@ export const registerPublicIncident = async (data, files, ipAddress) => {
     narrative: data.narrative,
     incidentDate: data.incidentDate || Date.now(),
     complainantName: data.complainantName || 'Anonymous',
-    complainantEmail: data.complainantEmail || '',
-    complainantContact: data.complainantContact || '',
+    complainantEmail,
+    complainantContact,
   });
 
   const evidenceUploads = Array.isArray(files) ? files : files ? [files] : [];

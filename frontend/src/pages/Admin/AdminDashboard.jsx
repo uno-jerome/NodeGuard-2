@@ -2,7 +2,7 @@ import AdminHeader from "../../Components/navbar/AdminHeader";
 import AnalystDashboard from "../Analyst/AnalystDashboard";
 
 
-export default function AdminCaseUpdate() {
+export default function AdminDashboard() {
 	return (
 		<>
 			<AdminHeader />

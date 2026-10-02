@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import '../design/Admin/SessionProvisionLog.css';
 import provisionLogo from '../../public/log_logo.svg';
 
@@ -6,33 +6,7 @@ const bookmark = provisionLogo;
 
 const nameOf = ({ name, email }) => name?.trim() || email.split('@')[0];
 
-export function useProvisioningLog() {
-  const [entries, setEntries] = useState([]);
-  const [toast, setToast] = useState(null);   
 
-    useEffect(() => {
-        if (!toast) return;
-        const timer = setTimeout(() => setToast(null), 4000);
-        return () => clearTimeout(timer);
-    }, [toast]);
-
-    const addStaff = ({ name = '', email, role = 'Investigator' }) => {
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-    const entry = { id: crypto.randomUUID(), name, email, role, time };
-    setEntries((list) => [entry, ...list]);
-    setToast({ type: 'added', entry });
-  };
- 
-  const removeStaff = (id) => {
-    const entry = entries.find((e) => e.id === id);
-    if (!entry) return;
-    setEntries((list) => list.filter((e) => e.id !== id));
-    setToast({ type: 'removed', entry });
-  };
- 
-  return { entries, addStaff, removeStaff, toast, clearToast: () => setToast(null) };
-}
- 
 export function SessionProvisioningLog({ entries, onRemove, removingStaffId = "" }) {
   const [selected, setSelected] = useState(null);
   const toggle = (id) => setSelected((cur) => (cur === id ? null : id));
