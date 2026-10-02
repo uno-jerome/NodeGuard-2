@@ -726,7 +726,7 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
                               <div className="chain-log-entry-meta">
                                 <span>By {log.performedBy?.name || log.performedBy?.email || "System"}</span>
                                 {log.evidenceFileId?.originalFilename && <span>Evidence: {log.evidenceFileId.originalFilename}</span>}
-                                {log.ipAddress && <span>IP: {log.ipAddress}</span>}
+                                {log.ipAddress && <span>IP: {String(log.ipAddress).replace(/^::ffff:/, '')}</span>}
                               </div>
                               {log.calculatedHash && <p className="chain-log-entry-hash">Hash: {log.calculatedHash}</p>}
                             </article>

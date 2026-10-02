@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit';
+import { normalizeIp } from './ipUtils.js';
 
 export const generateDossierPDF = (incident, logs = [], res) => {
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
@@ -58,8 +59,8 @@ export const generateDossierPDF = (incident, logs = [], res) => {
     logs.forEach((log) => {
       const timeStr = new Date(log.timestamp).toISOString();
       const roleStr = log.performedBy?.role || 'SYSTEM';
-      const actorStr = log.performedBy?.email || 'Automated Pipeline';
-      doc.font('Helvetica-Bold').text(`[${timeStr}] [${log.action}] Actor: ${actorStr} (${roleStr}) | IP: ${log.ipAddress || '127.0.0.1'}`);
+      const ipStr = normalizeIp(log.ipAddress);
+      doc.font('Helvetica-Bold').text(`[${timeStr}] [${log.action}] Actor: ${actorStr} (${roleStr}) | IP: ${ipStr}`);
       doc.font('Helvetica').text(`Details: ${log.details}`);
       if (log.calculatedHash) {
         doc.font('Courier').fontSize(7.5).text(`Verification Hash: ${log.calculatedHash}`);

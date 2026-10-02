@@ -4,6 +4,7 @@ import EvidenceFile from '../models/EvidenceFile.js';
 import ChainOfCustodyLog from '../models/ChainOfCustodyLog.js';
 import { computeFileHashes } from '../services/forensicService.js';
 import { generateDossierPDF } from '../utils/pdfGenerator.js';
+import { getClientIp, normalizeIp } from '../utils/ipUtils.js';
 
 const ALLOWED_STATUSES = ['Reported', 'Under Review', 'Investigating', 'Resolved', 'Closed'];
 
@@ -65,7 +66,7 @@ export const createPublicIncident = async (req, res) => {
       action: 'INGESTION',
       details: r ? `Public incident created with initial evidence: ${r.file.originalname}` : 'Public incident created without initial evidence file',
       calculatedHash: r?.hashes.sha256 || null,
-      ipAddress: req.ip || '127.0.0.1',
+      ipAddress: getClientIp(req),
     })));
 
     return res.status(201).json({ success: true, trackingId });
@@ -121,7 +122,12 @@ export const getIncidentById = async (req, res) => {
       .populate('performedBy', 'name email role')
       .populate('evidenceFileId', 'originalFilename')
       .sort({ timestamp: 1 });
-    return res.status(200).json({ success: true, incident, custodyLogs });
+    const formattedLogs = custodyLogs.map((log) => {
+      const obj = log.toObject();
+      obj.ipAddress = normalizeIp(obj.ipAddress);
+      return obj;
+    });
+    return res.status(200).json({ success: true, incident, custodyLogs: formattedLogs });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -146,7 +152,7 @@ export const updateStatus = async (req, res) => {
       performedBy: req.user.id,
       action: 'STATUS_CHANGE',
       details: `Status changed from "${previousStatus}" to "${status}" by ${req.user.name || req.user.email}`,
-      ipAddress: req.ip || '127.0.0.1',
+      ipAddress: getClientIp(req),
     });
     return res.status(200).json({ success: true, incident });
   } catch (error) {
@@ -172,7 +178,7 @@ export const addNote = async (req, res) => {
       performedBy: req.user.id,
       action: 'NOTE_ADDED',
       details: `Note added by ${req.user.name || req.user.email}`,
-      ipAddress: req.ip || '127.0.0.1',
+      ipAddress: getClientIp(req),
     });
     return res.status(200).json({ success: true, notes: incident.notes });
   } catch (error) {
@@ -201,7 +207,7 @@ export const exportDossier = async (req, res) => {
       performedBy: req.user.id,
       action: 'DOSSIER_EXPORT',
       details: 'Official forensic court dossier exported as PDF',
-      ipAddress: req.ip || '127.0.0.1',
+      ipAddress: getClientIp(req),
     });
     return generateDossierPDF(incident, logs, res);
   } catch (error) {
@@ -221,7 +227,7 @@ export const getAuditLog = async (req, res) => {
     action: log.action,
     actor: log.performedBy?.name ?? 'PUBLIC_ANONYMOUS',
     role: log.performedBy?.role === 'ADMIN' ? 'Admin' : log.performedBy?.role === 'INVESTIGATOR' ? 'Investigator' : 'Client',
-    ip: log.ipAddress ?? '—',
+    ip: log.ipAddress ? normalizeIp(log.ipAddress) : '—',
     details: log.details,
     timestamp: log.timestamp,
     incidentId: log.incidentId?.trackingId ?? null,

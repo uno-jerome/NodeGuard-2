@@ -3,6 +3,7 @@ import fs from 'fs';
 import EvidenceFile from '../models/EvidenceFile.js';
 import ChainOfCustodyLog from '../models/ChainOfCustodyLog.js';
 import { computeFileHashes } from '../services/forensicService.js';
+import { getClientIp } from '../utils/ipUtils.js';
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 
@@ -43,7 +44,7 @@ export const verifyEvidence = async (req, res) => {
         action: isMatch ? 'VERIFY_PASS' : 'VERIFY_FAIL',
         details,
         calculatedHash: currentHashes?.sha256 || null,
-        ipAddress: req.ip || '127.0.0.1',
+        ipAddress: getClientIp(req),
       }),
     ]).catch((err) => console.error('[ChainOfCustody Log Error]', err.message));
 
@@ -91,7 +92,7 @@ export const streamEvidence = async (req, res) => {
       action: isPreview ? 'VIEW' : 'DOWNLOAD',
       details: `Evidence file ${isPreview ? 'previewed' : 'downloaded'}: ${evidence.originalFilename}`,
       calculatedHash: evidence.sha256Hash,
-      ipAddress: req.ip || '127.0.0.1',
+      ipAddress: getClientIp(req),
     }).catch((err) => console.error('[ChainOfCustody Log Error]', err.message));
 
     const disposition = isPreview ? 'inline' : 'attachment';
