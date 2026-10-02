@@ -1,0 +1,14 @@
+# Environment secrets — NEVER commit
+.env
+.env.local
+.env.*.local
+
+# Uploaded evidence files
+uploads/
+
+# Dependencies
+node_modules/
+
+# OS noise
+.DS_Store
+Thumbs.db
