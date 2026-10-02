@@ -357,7 +357,7 @@ export default function AnalystCaseUpdate({ showHeader = true }) {
       const results = await Promise.all(files.map(async (file) => {
         if (!file._id) return [file._id, { verificationStatus: "error", errorMessage: "Evidence record ID is missing." }];
         try {
-          const response = await axiosClient.post(`/evidence/${file._id}/verify`, null, {
+          const response = await axiosClient.post(`/evidence/${file._id}/verify`, {}, {
             signal: controller.signal,
           });
           const verificationStatus = response.data.verificationStatus || (response.data.match ? "verified" : "mismatch");

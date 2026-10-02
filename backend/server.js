@@ -49,7 +49,7 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '1mb', strict: false }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Keep-alive health check endpoint for external uptime services (e.g. Render spin-up keepalive)
