@@ -6,7 +6,7 @@ export default function AdminDashboard() {
 	return (
 		<>
 			<AdminHeader />
-			<AnalystDashboard showHeader={false} showInspect={false} />
+			<AnalystDashboard showHeader={false} showInspect={false} adminMode />
 		</>
 	);
 }

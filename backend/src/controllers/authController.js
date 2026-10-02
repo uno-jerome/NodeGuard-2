@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Incident from '../models/Incident.js';
 
 export const login = async (req, res) => {
   try {
@@ -129,8 +130,18 @@ export const register = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find({ isActive: true }).select('name email role createdAt').sort({ createdAt: -1 });
-    return res.status(200).json({ success: true, users });
+    const [users, assignmentCounts] = await Promise.all([
+      User.find({ isActive: true }).select('name email role createdAt').sort({ createdAt: -1 }).lean(),
+      Incident.aggregate([
+        { $match: { assignedTo: { $ne: null } } },
+        { $group: { _id: '$assignedTo', count: { $sum: 1 } } },
+      ]),
+    ]);
+    const countsByUserId = new Map(assignmentCounts.map(({ _id, count }) => [String(_id), count]));
+    return res.status(200).json({
+      success: true,
+      users: users.map((user) => ({ ...user, assignedCaseCount: countsByUserId.get(String(user._id)) || 0 })),
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

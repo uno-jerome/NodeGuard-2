@@ -9,8 +9,9 @@ import {
   addNote,
   exportDossier,
   getAuditLog,
+  assignIncident,
 } from '../controllers/incidentController.js';
-import { verifyToken } from '../middleware/authMiddleware.js';
+import { verifyToken, requireRole } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
@@ -22,6 +23,7 @@ router.post('/', makePublicLimiter(30, 'Too many submissions. Please try again l
 router.get('/track/:trackingId', makePublicLimiter(60, 'Too many tracking requests. Please try again later.'), getIncidentByTrackingId);
 router.get('/', verifyToken, getIncidents);
 router.get('/audit', verifyToken, getAuditLog);
+router.patch('/:id/assign', verifyToken, requireRole('ADMIN'), assignIncident);
 router.get('/:id', verifyToken, getIncidentById);
 router.patch('/:id/status', verifyToken, updateStatus);
 router.post('/:id/notes', verifyToken, addNote);

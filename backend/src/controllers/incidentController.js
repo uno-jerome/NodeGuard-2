@@ -1,4 +1,5 @@
 import Incident from '../models/Incident.js';
+import User from '../models/User.js';
 import ChainOfCustodyLog from '../models/ChainOfCustodyLog.js';
 import { registerPublicIncident } from '../services/incidentService.js';
 import { ALLOWED_STATUSES, buildIncidentFilter } from '../utils/incidentHelpers.js';
@@ -33,6 +34,7 @@ export const getIncidents = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const filter = buildIncidentFilter(req.query);
+    if (req.user.role === 'INVESTIGATOR') filter.assignedTo = req.user.id;
     const skip = (Number(page) - 1) * Number(limit);
     const [incidents, total] = await Promise.all([
       Incident.find(filter)
@@ -46,6 +48,34 @@ export const getIncidents = async (req, res) => {
     return res.status(200).json({ success: true, incidents, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const assignIncident = async (req, res) => {
+  try {
+    const { analystId } = req.body;
+    const analyst = await User.findOne({ _id: analystId, role: 'INVESTIGATOR', isActive: true });
+    if (!analyst) return res.status(404).json({ success: false, message: 'Active analyst not found.' });
+
+    const incident = await Incident.findById(req.params.id);
+    if (!incident) return res.status(404).json({ success: false, message: 'Incident not found.' });
+
+    const previousAnalyst = incident.assignedTo;
+    incident.assignedTo = analyst._id;
+    await incident.save();
+    await ChainOfCustodyLog.create({
+      incidentId: incident._id,
+      evidenceFileId: null,
+      performedBy: req.user.id,
+      action: 'CASE_ASSIGNMENT',
+      details: `Case assigned to ${analyst.name} (${analyst.email}) by ${req.user.name || req.user.email}${previousAnalyst ? `; previous assignee: ${previousAnalyst}` : ''}`,
+      ipAddress: req.ip || '127.0.0.1',
+    });
+
+    await incident.populate('assignedTo', 'name email role');
+    return res.status(200).json({ success: true, incident });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -177,4 +207,4 @@ export const getAuditLog = async (req, res) => {
   return res.status(200).json({ success: true, entries, incidentOptions });
 };
 
-export default { createPublicIncident, getIncidentByTrackingId, getIncidents, getIncidentById, updateStatus, addNote, exportDossier, getAuditLog };
+export default { createPublicIncident, getIncidentByTrackingId, getIncidents, getIncidentById, assignIncident, updateStatus, addNote, exportDossier, getAuditLog };

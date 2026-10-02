@@ -225,6 +225,108 @@ td
 .view-case-button:hover {
     background: rgba(62, 111, 196, 0.7);
 }
+.view-case-button:disabled {
+    cursor: wait;
+    opacity: .6;
+}
+.assignment-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(0, 5, 16, .76);
+    backdrop-filter: blur(4px);
+}
+.assignment-dialog {
+    width: min(100%, 560px);
+    max-height: min(80vh, 720px);
+    overflow-y: auto;
+    border: 1px solid #405577;
+    border-radius: 10px;
+    padding: 24px;
+    background: #08101f;
+    color: #e8edf8;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .48);
+}
+.assignment-dialog h2 {
+    margin: 0;
+    font-size: 21px;
+}
+.assignment-case-title {
+    margin: 7px 0 18px;
+    color: #aab8d0;
+    font-size: 14px;
+}
+.analyst-assignment-list {
+    display: grid;
+    gap: 8px;
+}
+.analyst-assignment-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid #273954;
+    border-radius: 7px;
+    padding: 12px;
+    background: #0b1527;
+}
+.assigned-analyst-summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+.assignment-current-label {
+    color: #75d891;
+    font-size: 12px;
+    font-weight: 700;
+}
+.analyst-assignment-person {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+}
+.analyst-assignment-person strong {
+    overflow: hidden;
+    color: #edf4ff;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.analyst-assignment-person small {
+    overflow-wrap: anywhere;
+    color: #91a1bb;
+    font-size: 11px;
+}
+.analyst-case-count {
+    display: grid;
+    min-width: 54px;
+    justify-items: center;
+    gap: 2px;
+    color: #b8d7ff;
+}
+.analyst-case-count strong {
+    font-size: 17px;
+    line-height: 1;
+}
+.analyst-case-count small {
+    color: #8392aa;
+    font-size: 10px;
+}
+.assignment-feedback,
+.assignment-empty {
+    margin: 12px 0;
+    font-size: 13px;
+}
+.assignment-feedback-error {
+    color: #ff9db4;
+}
+.assignment-feedback-success {
+    color: #75d891;
+}
+.assignment-empty {
+    color: #aab8d0;
+}
 .category-badge 
 { 
     display: inline-block; 
@@ -373,4 +475,20 @@ td
     { 
         flex: 1; 
     } 
+}
+@media (max-width: 480px) {
+    .assignment-dialog {
+        padding: 18px;
+    }
+    .analyst-assignment-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .analyst-case-count {
+        grid-column: 2;
+        grid-row: 1;
+    }
+    .analyst-assignment-row .view-case-button {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
 }
