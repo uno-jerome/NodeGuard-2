@@ -59,7 +59,7 @@ nodeguard/
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/uno-jerome/NodeGuard.git
+git clone [https://github.com/uno-jerome/NodeGuard.git](https://github.com/y5jo/NodeGuard.git)
 cd NodeGuard
 ```
 
